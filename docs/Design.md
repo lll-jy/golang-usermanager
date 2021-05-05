@@ -99,10 +99,3 @@ The nickname can be any UTF-8 string of no more than 30 characters.
 The dataflow is seen as follows.
 
 ![data flow](diagrams/data_flow.png)
-
-## Backward Compatibility
-
-## Dependencies
-
-## Resource Estimation
-
