@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 )
 
@@ -17,6 +18,11 @@ const (
 	connType = "tcp"
 )
 
+func homePageHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "<h1>Hello world</h1><p>content</p>")
+	log.Println("Open home page")
+}
+
 func main() {
 	// Start the client and connect to the server.
 	fmt.Println("Connecting to", connType, "server", connHost+":"+connPort)
@@ -25,6 +31,19 @@ func main() {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)
 	}
+
+	/*
+		for {
+			http.HandleFunc("/", homePageHandler)
+			conn.Write([]byte("connected" + connPort))
+			msg, err := bufio.NewReader(conn).ReadString('\n')
+			if err != nil {
+				fmt.Println("Err: ", err.Error())
+			}
+			fmt.Println(msg)
+			log.Fatal(http.ListenAndServe(":"+connPort, nil))
+		}
+	*/
 
 	// Create new reader from Stdin.
 	reader := bufio.NewReader(os.Stdin)
@@ -45,6 +64,10 @@ func main() {
 
 		// Print server relay.
 		log.Print("Server relay: " + message)
+
+		// added
+		// http.HandleFunc("/", homePageHandler)
+		// log.Fatal(http.ListenAndServe(":"+connPort, nil))
 	}
 }
 
