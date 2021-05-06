@@ -47,6 +47,8 @@ func main() {
 
 	// Create new reader from Stdin.
 	reader := bufio.NewReader(os.Stdin)
+	// go http.HandleFunc("/", homePageHandler)
+	// go log.Fatal(http.ListenAndServe(":"+connPort, nil))
 
 	// run loop forever, until exit.
 	for {
@@ -66,8 +68,8 @@ func main() {
 		log.Print("Server relay: " + message)
 
 		// added
-		// http.HandleFunc("/", homePageHandler)
-		// log.Fatal(http.ListenAndServe(":"+connPort, nil))
+		http.HandleFunc("/", homePageHandler)
+		// go log.Fatal(http.ListenAndServe(":"+connPort, nil))
 	}
 }
 
