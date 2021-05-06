@@ -11,61 +11,71 @@ The app is a simple web application with the web app server connected to a datab
 1. A server socket port is started waiting for incoming connection requests.
 1. A client socket is created to connect to the server socket as connection socket.
 1. An HTTP request is sent from the client socket and read by the connection socket. Possible requests are seen in [API Design](#api-design) section. Socket programming as well as HTTP requests handling are written in GoLang.
-1. Database queries are made based on the requests and data is fetched from the database (to be elaborated separately below). The database used is MySQL and github.com/go-sql-driver/mysql is used to integrate with GoLang.
+1. A database query checking authentification is first sent to the database to ask whether the user has the right to perform the desired action, which is in essence user login check. The database used is MySQL and github.com/go-sql-driver/mysql is used to integrate with GoLang.
+1. Successful login would allow the server to enter a session. The session is handled using github.com/gorilla/mux and github.com/gorilla/securecookie.
+1. The server continue to handle the database query made based on the requests and data is fetched from the database (to be elaborated separately below). Database queries are made based on the requests and data is fetched from the database (to be elaborated separately below). 
 1. The connection socket generates corresponding HTTP responses based on the results from database and send to the client socket.
 1. The client socket read the response from connection socket and report to the user.
-1. Repeat 3 to 6 to handle more requests from the user.
+1. Repeat 3 to 8 to handle more requests from the user.
 1. Close the current client socket.
-1. Repeat 2 to 8 to handle requests from more users, possibly simultaneously.
+1. Repeat 2 to 10 to handle requests from more users, possibly simultaneously.
 1. Close the connection socket.
 
 ## API Design
 
 | Method | Path             | Description                               |
 |--------|------------------|-------------------------------------------|
-| GET    | /                | Home page                                 |
+| GET    | /                | Home page (log in)                        |
 | GET    | /signup          | Sign up page                              |
 | POST   | /signup          | Add a new user to the database            |
-| GET    | /login           | Log in page                               |
-| GET    | /:username       | Profile display page of the user          |
-| DELETE | /:username       | Delete the user from database             |
-| GET    | /:username/edit  | Edit profile page                         |
-| POST   | /:username/edit  | Upgrade user profile in the database      |
-| GET    | /:username/reset | Reset user info page                      |
-| POST   | /:username/reset | Upgrade user info in the database         |
+| POST   | /login           | Authenticate users with correct password  |
+| POST   | /logout          | Log out                                   |
+| GET    | /view            | User page (with username and profile)     |
+| DELETE | /:username       | Delete the user from database             | TODO!
+| GET    | /edit            | Edit profile page                         |
+| POST   | /edit            | Upgrade user profile in the database      |
+| GET    | /reset           | Reset user info page                      |
+| POST   | /reset           | Upgrade user info in the database         |
 * Note: user info refers to username and password, and user profile refers to the user profile photo and nickname.
 
 ### GET `/`
-Display the homepage to the user from the HTML template that allows the user to choose to sign up or log in.
+Display the homepage to the user from the HTML template that allows the user to choose to provide the username and password to log in.
 
 ### GET `/signup`
 Display the sign up page to the user from the HTML template that allows the user to provide the username and password that the user wants to sign up for.
 
 ### POST `/signup`
-Insert a new user to the database with the username and password specified. Then redirect to `GET /:username/edit` to ask the user to provide initial profile.
+Insert a new user to the database with the username and password specified. 
 
-### GET `/login`
-Display the log in page to the user from the HTML template that allows the user to provide the username and password. Successful login would result to `GET /:username`
+Successful sign up would redirect to `GET /edit` to ask the user to provide initial profile.
 
-### GET `/:username`
+### POST `/login`
+Checks validity of the user's identity.
+
+Successful login would result to `GET /view`.
+
+Unrecognized but valid username log in would redirect to `GET /signup`. The user can also choose to sign up directly.
+
+### POST `/logout`
+User logs out and go back to the home page.
+
+### GET `/view`
 Display the profile page to the user from the HTML template that allows the user to view the username, nickname, and profile photo, and choose to edit profile, reset password, or delete user.
 
 ### DELETE `/:username`
 Delete the user from the database and redirect to the homepage.
 
-### GET `/:username/edit`
+### GET `/edit`
 Display the edit profile page to the user from the HTML template that allows the user to (re-)upload profile photo and/or change a nickname.
 
-### POST `/:username/edit`
-Save the photo uploaded by the user and get its address. Then save the changes to the user profile to the database and redirect to `GET /:username`.
+### POST `/edit`
+Save the photo uploaded by the user and get its address. Then save the changes to the user profile to the database and redirect to `GET /view`.
 
-### GET `/:username/reset`
-Display the reset user info page to the user from the HTML template that allows the user to reset the password.
+### GET `/reset`
+Display the reset user info page to the user from the HTML template that allows the user to reset the username and/or password.
 
-### POST `/:username/reset`
-Save the new user info and update the database accordingly. Then redirect to `GET /:username`.
-
-PS. I'm also considering using sessions instead of using username explicitly in the path, which may be more secure, but I'm not sure about its implementation now.
+### POST `/reset`
+Save the new user info and update the database accordingly. Then redirect to `GET /view`.
 
 ## Data Schema Design
 
