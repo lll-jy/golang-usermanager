@@ -1,15 +1,16 @@
-<h1>Login</h1>
-<form method="POST" action="/login">
+<h1>Sign up</h1>
+<form method="POST" action="/signup">
     <label for="name">User name</label>
     <input type="text" id="name" name="name" value={{.User.Name}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
     <br><br>
     <label for="password">Password</label>
-    <input type="password" id="password" name="password">
+    <input type="password" id="password" name="password" value={{.User.Password}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordErr}}</err>
     <br><br>
-    <button type="submit">Login</button>
-</form>
-<form method="GET" action="/signup">
+    <label for="password_repeat">Password</label>
+    <input type="password" id="password_repeat" name="password_repeat">
+    <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordRepeatErr}}</err>
+    <br><br>
     <button type="submit">Sign Up</button>
 </form>

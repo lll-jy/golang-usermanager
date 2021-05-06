@@ -29,8 +29,9 @@ type User struct {
 }
 
 type InfoErr struct {
-	UsernameErr string
-	PasswordErr string
+	UsernameErr       string
+	PasswordErr       string
+	PasswordRepeatErr string
 }
 
 type PageInfo struct {
@@ -44,6 +45,7 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	var password string
 	var nameErr string
 	var passErr string
+	var repeatPassErr string
 	if cookie, err := r.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
@@ -51,10 +53,18 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 			password = cookieValue["pass"]
 			nameErr = cookieValue["nameErr"]
 			passErr = cookieValue["passErr"]
+			repeatPassErr = cookieValue["repeatPassErr"]
 		}
 	}
-	u := User{Name: username, Password: password}
-	ie := InfoErr{UsernameErr: nameErr, PasswordErr: passErr}
+	u := User{
+		Name:     username,
+		Password: password,
+	}
+	ie := InfoErr{
+		UsernameErr:       nameErr,
+		PasswordErr:       passErr,
+		PasswordRepeatErr: repeatPassErr,
+	}
 	return PageInfo{
 		User:    u,
 		InfoErr: ie,
@@ -63,10 +73,11 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 
 func setSession(u User, uie InfoErr, w http.ResponseWriter) {
 	value := map[string]string{
-		"name":    u.Name,
-		"pass":    u.Password,
-		"nameErr": uie.UsernameErr,
-		"passErr": uie.PasswordErr,
+		"name":          u.Name,
+		"pass":          u.Password,
+		"nameErr":       uie.UsernameErr,
+		"passErr":       uie.PasswordErr,
+		"repeatPassErr": uie.PasswordRepeatErr,
 	}
 	if encoded, err := cookieHandler.Encode("session", value); err == nil {
 		cookie := &http.Cookie{
@@ -89,7 +100,11 @@ func clearSession(w http.ResponseWriter) {
 }
 
 // templates
-var templates = template.Must(template.ParseFiles("templates/index.html", "templates/view.html"))
+var templates = template.Must(template.ParseFiles(
+	"templates/index.html",
+	"templates/view.html",
+	"templates/signup.html",
+))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, info PageInfo) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", info)
@@ -100,8 +115,18 @@ func renderTemplate(w http.ResponseWriter, tmpl string, info PageInfo) {
 
 // validation helper functions
 
-func isExistingUsername(username string) bool { // TODO
+func isValidUsername(username string) bool { // TODO
 	var validUsername = regexp.MustCompile("^u([a-z]+)$")
+	return validUsername.MatchString(username)
+}
+
+func isValidPassword(password string) bool { // TODO
+	var validPassword = regexp.MustCompile("^uu([a-z]+)$")
+	return validPassword.MatchString(password)
+}
+
+func isExistingUsername(username string) bool { // TODO
+	var validUsername = regexp.MustCompile("^uu([a-z]+)$")
 	return validUsername.MatchString(username)
 }
 
@@ -130,7 +155,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
-		// TODO signup
+		redirectTarget = "/signup"
 	}
 	setSession(u, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
@@ -143,6 +168,39 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 302)
 }
 
+// sign up handler
+
+func signupHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	pass := r.FormValue("password")
+	repeatPass := r.FormValue("password_repeat")
+	redirectTarget := "/signup"
+	u := User{Name: name, Password: pass}
+	ie := InfoErr{}
+	if isValidUsername(name) {
+		if isExistingUsername(name) {
+			log.Printf("User signup failure: duplicate user %s found.", name)
+			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
+		} else if isValidPassword(pass) {
+			if pass == repeatPass {
+				log.Printf("New user %s signed up.", name)
+				redirectTarget = "/view" // TODO: insert
+			} else {
+				log.Printf("User signup failure: password does not match.")
+				ie.PasswordRepeatErr = "The password does not match."
+			}
+		} else {
+			log.Printf("User signup failure: password format invalid.")
+			ie.PasswordErr = "The password is not valid." // TODO requirement
+		}
+	} else {
+		log.Printf("User signup failture: invalid username format of %s.", name)
+		ie.UsernameErr = "The username format is not valid." // TODO requirement
+	}
+	setSession(u, ie, w)
+	http.Redirect(w, r, redirectTarget, 302)
+}
+
 // index page
 
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +210,7 @@ func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 
 func signupPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
-
+	renderTemplate(w, "signup", info)
 }
 
 // view page
@@ -179,9 +237,11 @@ func main() {
 
 	router.HandleFunc("/", indexPageHandler)
 	router.HandleFunc("/view", viewPageHandler)
+	router.HandleFunc("/signup", signupPageHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
+	router.HandleFunc("/signup", signupHandler).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
