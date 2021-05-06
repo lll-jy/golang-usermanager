@@ -1,0 +1,11 @@
+syntax = "proto3";
+package main;
+
+option go_package = "../cmd/protocol";
+
+message User {
+    string name = 1;
+    string password = 2;
+    string photoUrl = 3;
+    string nickname = 4;
+}

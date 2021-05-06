@@ -10,8 +10,10 @@ import (
 	"regexp"
 	"text/template"
 
+	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+	"google.golang.org/protobuf/proto"
 )
 
 // cookie handling
@@ -21,15 +23,15 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32),
 )
 
-type User struct {
+/*type User struct {
 	Name     string
 	Password string
 	PhotoUrl string
 	Nickname string
-}
+}*/
 
-func createUser(name string, pass string) User {
-	return User{
+func createUser(name string, pass string) protocol.User {
+	return protocol.User{
 		Name:     name,
 		Password: pass,
 		PhotoUrl: "",
@@ -44,7 +46,7 @@ type InfoErr struct {
 }
 
 type PageInfo struct {
-	User         User
+	User         protocol.User
 	InfoErr      InfoErr
 	DisplayName  string
 	Action       string
@@ -72,7 +74,7 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 			repeatPassErr = cookieValue["repeatPassErr"]
 		}
 	}
-	u := User{
+	u := protocol.User{
 		Name:     username,
 		Password: password,
 		PhotoUrl: photo,
@@ -89,7 +91,7 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	}
 }
 
-func setSession(u User, uie InfoErr, w http.ResponseWriter) {
+func setSession(u protocol.User, uie InfoErr, w http.ResponseWriter) {
 	value := map[string]string{
 		"name":          u.Name,
 		"pass":          u.Password,
@@ -325,6 +327,23 @@ func resetPageHandler(w http.ResponseWriter, r *http.Request) {
 var router = mux.NewRouter()
 
 func main() {
+
+	u := &protocol.User{
+		Name:     "name",
+		Password: "password",
+	}
+	out, err := proto.Marshal(u)
+	if err != nil {
+		fmt.Println("error: ", err)
+	} else {
+		fmt.Println(out)
+	}
+	u2 := &protocol.User{}
+	if err := proto.Unmarshal(out, u2); err != nil {
+		fmt.Println("2error: ", err)
+	} else {
+		fmt.Println(u2)
+	}
 
 	router.HandleFunc("/", indexPageHandler)
 	router.HandleFunc("/view", viewPageHandler)
