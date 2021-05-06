@@ -44,9 +44,12 @@ type InfoErr struct {
 }
 
 type PageInfo struct {
-	User        User
-	InfoErr     InfoErr
-	DisplayName string
+	User         User
+	InfoErr      InfoErr
+	DisplayName  string
+	Action       string
+	Title        string
+	CancelAction string
 }
 
 func getPageInfo(r *http.Request) (info PageInfo) {
@@ -188,11 +191,11 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // sign up handler
 
-func signupHandler(w http.ResponseWriter, r *http.Request) {
+func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
-	redirectTarget := "/signup"
+	redirectTarget := rt
 	u := createUser(name, pass)
 	ie := InfoErr{}
 	if isValidUsername(name) {
@@ -219,6 +222,19 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
+func signupHandler(w http.ResponseWriter, r *http.Request) {
+	userInfoHandler(w, r, "/signup")
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		userInfoHandler(w, r, "/reset")
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
 // edit handler
 
 func editHandler(w http.ResponseWriter, r *http.Request) {
@@ -242,6 +258,9 @@ func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 
 func signupPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
+	info.Action = "/signup"
+	info.Title = "Sign up"
+	info.CancelAction = "/"
 	renderTemplate(w, "signup", info)
 }
 
@@ -276,6 +295,20 @@ func editPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// reset page
+
+func resetPageHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		info.Action = "/reset"
+		info.Title = "Reset"
+		info.CancelAction = "/view"
+		renderTemplate(w, "signup", info)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
 // server main method
 
 var router = mux.NewRouter()
@@ -286,11 +319,13 @@ func main() {
 	router.HandleFunc("/view", viewPageHandler)
 	router.HandleFunc("/signup", signupPageHandler).Methods("GET")
 	router.HandleFunc("/edit", editPageHandler).Methods("GET")
+	router.HandleFunc("/reset", resetPageHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.HandleFunc("/signup", signupHandler).Methods("POST")
 	router.HandleFunc("/edit", editHandler).Methods("POST")
+	router.HandleFunc("/reset", resetHandler).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)

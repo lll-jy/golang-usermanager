@@ -1,5 +1,5 @@
-<h1>Sign up</h1>
-<form method="POST" action="/signup">
+<h1>{{printf "%s" .Title}}</h1>
+<form method="POST" action={{.Action}}>
     <label for="name">Username</label>
     <input type="text" id="name" name="name" value={{.User.Name}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
@@ -12,6 +12,6 @@
     <input type="password" id="password_repeat" name="password_repeat">
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordRepeatErr}}</err>
     <br><br>
-    <button type="submit">Sign Up</button>
-    <a href="/"><button type="button">Cancel</button></a>
+    <button type="submit">{{printf "%s" .Title}}</button>
+    <a href={{.CancelAction}}><button type="button">Cancel</button></a>
 </form>
