@@ -1,6 +1,6 @@
 <h1>Sign up</h1>
 <form method="POST" action="/signup">
-    <label for="name">User name</label>
+    <label for="name">Username</label>
     <input type="text" id="name" name="name" value={{.User.Name}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
     <br><br>
@@ -13,4 +13,5 @@
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordRepeatErr}}</err>
     <br><br>
     <button type="submit">Sign Up</button>
+    <a href="/"><button type="button">Cancel</button></a>
 </form>

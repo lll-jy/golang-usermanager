@@ -1,6 +1,6 @@
 <h1>Login</h1>
 <form method="POST" action="/login">
-    <label for="name">User name</label>
+    <label for="name">Username</label>
     <input type="text" id="name" name="name" value={{.User.Name}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
     <br><br>
@@ -9,7 +9,5 @@
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordErr}}</err>
     <br><br>
     <button type="submit">Login</button>
-</form>
-<form method="GET" action="/signup">
-    <button type="submit">Sign Up</button>
+    <a href="/signup"><button type="button">Sign Up</button></a>
 </form>

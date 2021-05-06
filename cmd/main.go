@@ -28,6 +28,15 @@ type User struct {
 	Nickname string
 }
 
+func createUser(name string, pass string) User {
+	return User{
+		Name:     name,
+		Password: pass,
+		PhotoUrl: "",
+		Nickname: "",
+	}
+}
+
 type InfoErr struct {
 	UsernameErr       string
 	PasswordErr       string
@@ -43,6 +52,8 @@ type PageInfo struct {
 func getPageInfo(r *http.Request) (info PageInfo) {
 	var username string
 	var password string
+	var photo string
+	var nickname string
 	var nameErr string
 	var passErr string
 	var repeatPassErr string
@@ -51,6 +62,8 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
 			username = cookieValue["name"]
 			password = cookieValue["pass"]
+			photo = cookieValue["photo"]
+			nickname = cookieValue["nickname"]
 			nameErr = cookieValue["nameErr"]
 			passErr = cookieValue["passErr"]
 			repeatPassErr = cookieValue["repeatPassErr"]
@@ -59,6 +72,8 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	u := User{
 		Name:     username,
 		Password: password,
+		PhotoUrl: photo,
+		Nickname: nickname,
 	}
 	ie := InfoErr{
 		UsernameErr:       nameErr,
@@ -75,6 +90,8 @@ func setSession(u User, uie InfoErr, w http.ResponseWriter) {
 	value := map[string]string{
 		"name":          u.Name,
 		"pass":          u.Password,
+		"photo":         u.PhotoUrl,
+		"nickname":      u.Nickname,
 		"nameErr":       uie.UsernameErr,
 		"passErr":       uie.PasswordErr,
 		"repeatPassErr": uie.PasswordRepeatErr,
@@ -104,6 +121,7 @@ var templates = template.Must(template.ParseFiles(
 	"templates/index.html",
 	"templates/view.html",
 	"templates/signup.html",
+	"templates/profile.html",
 ))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, info PageInfo) {
@@ -141,7 +159,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	redirectTarget := "/"
 	// .. check credentials .. TODO
-	u := User{Name: name, Password: pass}
+	u := createUser(name, pass)
 	ie := InfoErr{}
 	if isExistingUsername(name) {
 		log.Printf("User %s found.", name)
@@ -175,7 +193,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
 	redirectTarget := "/signup"
-	u := User{Name: name, Password: pass}
+	u := createUser(name, pass)
 	ie := InfoErr{}
 	if isValidUsername(name) {
 		if isExistingUsername(name) {
@@ -215,15 +233,30 @@ func signupPageHandler(w http.ResponseWriter, r *http.Request) {
 
 // view page
 
+func setDisplayName(info PageInfo) {
+	if info.User.Nickname != "" {
+		info.DisplayName = info.User.Nickname
+	} else {
+		info.DisplayName = fmt.Sprintf("user %s", info.User.Name)
+	}
+}
+
 func viewPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		if info.User.Nickname != "" {
-			info.DisplayName = info.User.Nickname
-		} else {
-			info.DisplayName = fmt.Sprintf("user %s", info.User.Name)
-		}
+		setDisplayName(info)
 		renderTemplate(w, "view", info)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
+// edit page
+
+func editPageHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		renderTemplate(w, "profile", info)
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}
@@ -238,6 +271,7 @@ func main() {
 	router.HandleFunc("/", indexPageHandler)
 	router.HandleFunc("/view", viewPageHandler)
 	router.HandleFunc("/signup", signupPageHandler).Methods("GET")
+	router.HandleFunc("/edit", editPageHandler).Methods("GET")
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
