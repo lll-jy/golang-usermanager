@@ -191,7 +191,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // sign up handler
 
-func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string) {
+func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt string) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
@@ -205,7 +205,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string) {
 		} else if isValidPassword(pass) {
 			if pass == repeatPass {
 				log.Printf("New user %s signed up.", name)
-				redirectTarget = "/view" // TODO: insert
+				redirectTarget = tgt // TODO: insert
 			} else {
 				log.Printf("User signup failure: password does not match.")
 				ie.PasswordRepeatErr = "The password does not match."
@@ -223,13 +223,13 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string) {
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
-	userInfoHandler(w, r, "/signup")
+	userInfoHandler(w, r, "/signup", "/edit")
 }
 
 func resetHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		userInfoHandler(w, r, "/reset")
+		userInfoHandler(w, r, "/reset", "view")
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}
