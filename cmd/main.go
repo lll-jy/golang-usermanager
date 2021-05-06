@@ -1,6 +1,7 @@
 package main
 
 // https://gist.github.com/mschoebel/9398202
+// https://golang.org/doc/articles/wiki/
 
 import (
 	"fmt"
@@ -114,7 +115,7 @@ var router = mux.NewRouter()
 
 func main() {
 
-	router.HandleFunc("/", indexPageHandler)
+	router.HandleFunc("/login", indexPageHandler).Methods("GET")
 	router.HandleFunc("/internal", internalPageHandler)
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
