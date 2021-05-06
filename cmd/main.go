@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"text/template"
 
 	"github.com/gorilla/mux"
@@ -18,19 +19,30 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
-func getUsername(r *http.Request) (username string) {
+type User struct {
+	Name     string
+	Password string
+	PhotoUrl string
+	Nickname string
+}
+
+func getUser(r *http.Request) (u User) {
+	var username string
+	var password string
 	if cookie, err := r.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
 			username = cookieValue["name"]
+			password = cookieValue["pass"]
 		}
 	}
-	return username
+	return User{Name: username, Password: password}
 }
 
-func setSession(username string, w http.ResponseWriter) {
+func setSession(u User, w http.ResponseWriter) {
 	value := map[string]string{
-		"name": username,
+		"name": u.Name,
+		"pass": u.Password,
 	}
 	if encoded, err := cookieHandler.Encode("session", value); err == nil {
 		cookie := &http.Cookie{
@@ -62,6 +74,15 @@ func renderTemplate(w http.ResponseWriter, tmpl string) {
 	}
 }
 
+func isExistingUsername(username string) bool { // TODO
+	var validUsername = regexp.MustCompile("^u([a-z]+)$")
+	return validUsername.MatchString(username)
+}
+
+func isCorrectPassword(username string, password string) bool { // TODO
+	return username == password
+}
+
 // login handler
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,8 +90,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	redirectTarget := "/"
 	if name != "" && pass != "" {
-		// .. check credentials ..
-		setSession(name, w)
+		// .. check credentials .. TODO
+		if isExistingUsername(name) {
+			fmt.Println("exist!!")
+			if isCorrectPassword(name, pass) {
+				fmt.Println("login successful!")
+			} else {
+				fmt.Println("Fail~")
+			}
+		} else {
+			fmt.Println("not exist!!")
+		}
+		setSession(User{Name: name, Password: pass}, w)
 		redirectTarget = "/internal"
 	}
 	http.Redirect(w, r, redirectTarget, 302)
@@ -101,7 +132,8 @@ const internalPage = `
 `
 
 func internalPageHandler(w http.ResponseWriter, r *http.Request) {
-	username := getUsername(r)
+	u := getUser(r)
+	username := u.Name
 	if username != "" {
 		fmt.Fprintf(w, internalPage, username)
 	} else {
@@ -115,7 +147,7 @@ var router = mux.NewRouter()
 
 func main() {
 
-	router.HandleFunc("/login", indexPageHandler).Methods("GET")
+	router.HandleFunc("/", indexPageHandler)
 	router.HandleFunc("/internal", internalPageHandler)
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
