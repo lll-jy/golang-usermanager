@@ -219,6 +219,20 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
+// edit handler
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		info.User.PhotoUrl = r.FormValue("photo")
+		info.User.Nickname = r.FormValue("nickname") // TODO
+		setSession(info.User, info.InfoErr, w)
+		http.Redirect(w, r, "/view", 302)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
 // index page
 
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +247,7 @@ func signupPageHandler(w http.ResponseWriter, r *http.Request) {
 
 // view page
 
-func setDisplayName(info PageInfo) {
+func setDisplayName(info *PageInfo) {
 	if info.User.Nickname != "" {
 		info.DisplayName = info.User.Nickname
 	} else {
@@ -244,7 +258,7 @@ func setDisplayName(info PageInfo) {
 func viewPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		setDisplayName(info)
+		setDisplayName(&info)
 		renderTemplate(w, "view", info)
 	} else {
 		http.Redirect(w, r, "/", 302)
@@ -276,6 +290,7 @@ func main() {
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.HandleFunc("/signup", signupHandler).Methods("POST")
+	router.HandleFunc("/edit", editHandler).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
