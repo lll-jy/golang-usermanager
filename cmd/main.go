@@ -249,6 +249,17 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// delete handler
+
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		// TODO delete user
+		clearSession(w)
+	}
+	http.Redirect(w, r, "/", 302)
+}
+
 // index page
 
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -326,6 +337,7 @@ func main() {
 	router.HandleFunc("/signup", signupHandler).Methods("POST")
 	router.HandleFunc("/edit", editHandler).Methods("POST")
 	router.HandleFunc("/reset", resetHandler).Methods("POST")
+	router.HandleFunc("/delete", deleteHandler).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)

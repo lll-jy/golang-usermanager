@@ -31,7 +31,7 @@ The app is a simple web application with the web app server connected to a datab
 | POST   | /login           | Authenticate users with correct password  |
 | POST   | /logout          | Log out                                   |
 | GET    | /view            | User page (with username and profile)     |
-| DELETE | /:username       | Delete the user from database             | TODO!
+| POST   | /delete          | Delete the user from database             |
 | GET    | /edit            | Edit profile page                         |
 | POST   | /edit            | Upgrade user profile in the database      |
 | GET    | /reset           | Reset user info page                      |
@@ -62,7 +62,7 @@ User logs out and go back to the home page.
 ### GET `/view`
 Display the profile page to the user from the HTML template that allows the user to view the username, nickname, and profile photo, and choose to edit profile, reset password, or delete user.
 
-### DELETE `/:username`
+### POST `/delete`
 Delete the user from the database and redirect to the homepage.
 
 ### GET `/edit`
