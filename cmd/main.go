@@ -34,8 +34,9 @@ type InfoErr struct {
 }
 
 type PageInfo struct {
-	User    User
-	InfoErr InfoErr
+	User        User
+	InfoErr     InfoErr
+	DisplayName string
 }
 
 func getPageInfo(r *http.Request) (info PageInfo) {
@@ -88,14 +89,16 @@ func clearSession(w http.ResponseWriter) {
 }
 
 // templates
-var templates = template.Must(template.ParseFiles("templates/index.html"))
+var templates = template.Must(template.ParseFiles("templates/index.html", "templates/view.html"))
 
-func renderUserinfoTemplate(w http.ResponseWriter, tmpl string, info PageInfo) {
+func renderTemplate(w http.ResponseWriter, tmpl string, info PageInfo) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", info)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+// validation helper functions
 
 func isExistingUsername(username string) bool { // TODO
 	var validUsername = regexp.MustCompile("^u([a-z]+)$")
@@ -127,6 +130,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
+		// TODO signup
 	}
 	setSession(u, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
@@ -143,25 +147,25 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
-	renderUserinfoTemplate(w, "index", info)
+	renderTemplate(w, "index", info)
 }
 
-// internal page
-
-const internalPage = `
-<h1>Internal</h1>
-<hr>
-<small>User: %s</small>
-<form method="post" action="/logout">
-    <button type="submit">Logout</button>
-</form>
-`
-
-func internalPageHandler(w http.ResponseWriter, r *http.Request) {
+func signupPageHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
-	username := info.User.Name
-	if username != "" {
-		fmt.Fprintf(w, internalPage, username)
+
+}
+
+// view page
+
+func viewPageHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		if info.User.Nickname != "" {
+			info.DisplayName = info.User.Nickname
+		} else {
+			info.DisplayName = fmt.Sprintf("user %s", info.User.Name)
+		}
+		renderTemplate(w, "view", info)
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}
@@ -174,7 +178,7 @@ var router = mux.NewRouter()
 func main() {
 
 	router.HandleFunc("/", indexPageHandler)
-	router.HandleFunc("/view", internalPageHandler)
+	router.HandleFunc("/view", viewPageHandler)
 
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")

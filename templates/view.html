@@ -1,0 +1,7 @@
+<h1>Hi, {{printf "%s" .DisplayName}}</h1>
+<hr>
+<p>{{printf "User: %s" .User.Name}}</p>
+<p><b>Photo: </b>{{ printf "%s" .User.PhotoUrl}}</p>
+<form method="post" action="/logout">
+    <button type="submit">Logout</button>
+</form>
