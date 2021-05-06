@@ -17,8 +17,6 @@ RUN go build cmd/main.go
 
 ENV PORT 8080
 
-# ENTRYPOINT [ "./main" ]
-
 EXPOSE 8080
 
 CMD ["./main"]
