@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"text/template"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
@@ -16,7 +17,7 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
-func getUserName(r *http.Request) (username string) {
+func getUsername(r *http.Request) (username string) {
 	if cookie, err := r.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
@@ -50,6 +51,16 @@ func clearSession(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
+// templates
+var templates = template.Must(template.ParseFiles("templates/index.html"))
+
+func renderTemplate(w http.ResponseWriter, tmpl string) {
+	err := templates.ExecuteTemplate(w, tmpl+".html", nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // login handler
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,19 +84,8 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // index page
 
-const indexPage = `
-<h1>Login</h1>
-<form method="post" action="/login">
-    <label for="name">User name</label>
-    <input type="text" id="name" name="name">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password">
-    <button type="submit">Login</button>
-</form>
-`
-
 func indexPageHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, indexPage)
+	renderTemplate(w, "index")
 }
 
 // internal page
@@ -100,7 +100,7 @@ const internalPage = `
 `
 
 func internalPageHandler(w http.ResponseWriter, r *http.Request) {
-	username := getUserName(r)
+	username := getUsername(r)
 	if username != "" {
 		fmt.Fprintf(w, internalPage, username)
 	} else {
