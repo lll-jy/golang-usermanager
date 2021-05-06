@@ -1,70 +1,125 @@
 package main
 
+// https://gist.github.com/mschoebel/9398202
+
 import (
-	"bufio"
 	"fmt"
-	"log"
-	"net"
-	"os"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/gorilla/securecookie"
 )
 
-// Application constants, defining host, port, and protocol.
-const (
-	connHost = "localhost"
-	connPort = "8080"
-	connType = "tcp"
-)
+// cookie handling
+
+var cookieHandler = securecookie.New(
+	securecookie.GenerateRandomKey(64),
+	securecookie.GenerateRandomKey(32))
+
+func getUserName(r *http.Request) (username string) {
+	if cookie, err := r.Cookie("session"); err == nil {
+		cookieValue := make(map[string]string)
+		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
+			username = cookieValue["name"]
+		}
+	}
+	return username
+}
+
+func setSession(username string, w http.ResponseWriter) {
+	value := map[string]string{
+		"name": username,
+	}
+	if encoded, err := cookieHandler.Encode("session", value); err == nil {
+		cookie := &http.Cookie{
+			Name:  "session",
+			Value: encoded,
+			Path:  "/",
+		}
+		http.SetCookie(w, cookie)
+	}
+}
+
+func clearSession(w http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, cookie)
+}
+
+// login handler
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	pass := r.FormValue("password")
+	redirectTarget := "/"
+	if name != "" && pass != "" {
+		// .. check credentials ..
+		setSession(name, w)
+		redirectTarget = "/internal"
+	}
+	http.Redirect(w, r, redirectTarget, 302)
+}
+
+// logout handler
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	clearSession(w)
+	http.Redirect(w, r, "/", 302)
+}
+
+// index page
+
+const indexPage = `
+<h1>Login</h1>
+<form method="post" action="/login">
+    <label for="name">User name</label>
+    <input type="text" id="name" name="name">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password">
+    <button type="submit">Login</button>
+</form>
+`
+
+func indexPageHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, indexPage)
+}
+
+// internal page
+
+const internalPage = `
+<h1>Internal</h1>
+<hr>
+<small>User: %s</small>
+<form method="post" action="/logout">
+    <button type="submit">Logout</button>
+</form>
+`
+
+func internalPageHandler(w http.ResponseWriter, r *http.Request) {
+	username := getUserName(r)
+	if username != "" {
+		fmt.Fprintf(w, internalPage, username)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
+// server main method
+
+var router = mux.NewRouter()
 
 func main() {
-	// Start the server and listen for incoming connections.
-	fmt.Println("Starting " + connType + " server on " + connHost + ":" + connPort)
-	l, err := net.Listen(connType, connHost+":"+connPort)
-	if err != nil {
-		fmt.Println("Error listening:", err.Error())
-		os.Exit(1)
-	}
-	// Close the listener when the application closes.
-	defer l.Close()
 
-	// run loop forever, until exit.
-	for {
-		// Listen for an incoming connection.
-		c, err := l.Accept()
-		if err != nil {
-			fmt.Println("Error connecting:", err.Error())
-			return
-		}
-		fmt.Println("Client connected.")
+	router.HandleFunc("/", indexPageHandler)
+	router.HandleFunc("/internal", internalPageHandler)
 
-		// Print client connection address.
-		fmt.Println("Client " + c.RemoteAddr().String() + " connected.")
+	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 
-		// Handle connections concurrently in a new goroutine.
-		go handleConnection(c)
-	}
+	http.Handle("/", router)
+	http.ListenAndServe(":8080", nil)
 }
-
-// handleConnection handles logic for a single connection request.
-func handleConnection(conn net.Conn) {
-	// Buffer client input until a newline.
-	buffer, err := bufio.NewReader(conn).ReadBytes('\n')
-
-	// Close left clients.
-	if err != nil {
-		fmt.Println("Client left.")
-		conn.Close()
-		return
-	}
-
-	// Print response message, stripping newline character.
-	log.Println("Client message:", string(buffer[:len(buffer)-1]))
-
-	// Send response message to the client.
-	conn.Write(buffer)
-
-	// Restart the process.
-	handleConnection(conn)
-}
-
-// Reference:
-// socket programming: https://github.com/Alice-Williams-Tech/go-sockets/tree/v0.1.0
