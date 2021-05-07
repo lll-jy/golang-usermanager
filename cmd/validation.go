@@ -22,16 +22,14 @@ func isValidPassword(password string) bool {
 }
 
 func isExistingUsername(username string, user *protocol.User) bool {
-	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ?")
+	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
 	if err != nil {
 		log.Printf("Cannot parse query: %s", err.Error())
 		return false
 	}
 	defer query.Close()
 	user.Password = ""
-	fmt.Println("before", user)
-	query.QueryRow(username).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
-	fmt.Println(user)
+	query.QueryRow(username, user.Name).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
 	return user.Password != ""
 }
 

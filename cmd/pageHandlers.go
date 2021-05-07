@@ -73,5 +73,6 @@ func resetPageHandler(w http.ResponseWriter, r *http.Request) {
 		info.Action = "/reset"
 		info.Title = "Reset"
 		info.CancelAction = "/view"
+		info.User.Password = ""
 	})
 }
