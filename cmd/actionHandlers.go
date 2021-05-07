@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -108,9 +109,17 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 func editHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		info.User.PhotoUrl = r.FormValue("photo")
+		//info.User.PhotoUrl = r.FormValue("photo")
 		info.User.Nickname = r.FormValue("nickname")
-		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", info.User.PhotoUrl, info.User.Nickname, info.User.Name)
+		photo := interface{}(info.User.PhotoUrl)
+		if info.User.PhotoUrl == "assets/placeholder.jpeg" || info.User.PhotoUrl == "" {
+			photo = nil
+		}
+		nickname := interface{}(info.User.Nickname)
+		if info.User.Nickname == "" {
+			nickname = nil
+		}
+		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
 		setSession(info.User, info.InfoErr, w)
 		http.Redirect(w, r, "/view", 302)
@@ -127,23 +136,27 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		file, handler, err := r.FormFile("photo_file")
 		if err != nil {
 			log.Println("Error retrieving file.")
-			return
+		} else {
+			defer file.Close()
+			log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
+			targetDir := "../../../Desktop/EntryTask/entry-task/test/data/upload" // EXTEND: May set to some cloud space
+			tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
+			if err != nil {
+				log.Println("Error generating temporary file.")
+				log.Println(err)
+			}
+			defer tempFile.Close()
+			fileBytes, err := ioutil.ReadAll(file)
+			if err != nil {
+				log.Println("Error reading file.")
+			}
+			tempFile.Write(fileBytes)
+			dirs := strings.Split(tempFile.Name(), "/")
+			info.User.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
+			setSession(info.User, info.InfoErr, w)
+			log.Println("Successfully uploaded file")
 		}
-		defer file.Close()
-		log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
-		targetDir := "../../../Desktop/EntryTask/entry-task/test/data/upload" // EXTEND: May set to some cloud space
-		tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
-		if err != nil {
-			log.Println("Error generating temporary file.")
-			log.Println(err)
-		}
-		defer tempFile.Close()
-		fileBytes, err := ioutil.ReadAll(file)
-		if err != nil {
-			log.Println("Error reading file.")
-		}
-		tempFile.Write(fileBytes)
-		log.Println("Successfully uploaded file")
+		http.Redirect(w, r, "/edit", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}

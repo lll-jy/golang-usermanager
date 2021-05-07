@@ -46,7 +46,6 @@ func isExistingUsername(username string, user *protocol.User) bool {
 		if user.PhotoUrl == "" {
 			user.PhotoUrl = "assets/placeholder.jpeg" // EXTEND: maybe some cloud space
 		}
-		fmt.Printf("you are here: %v\n", user)
 		return true
 	} else {
 		return false

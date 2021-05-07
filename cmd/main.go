@@ -127,9 +127,9 @@ func main() {
 	setHandleFunc(router)
 
 	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
-	staticFileDir := http.Dir("./assets")
-	staticFileHandler := http.StripPrefix("/assets/", http.FileServer(staticFileDir))
-	router.PathPrefix("/assets/").Handler(staticFileHandler).Methods("GET")
+	staticFileDir := http.Dir("./")
+	staticFileHandler := http.StripPrefix("/", http.FileServer(staticFileDir))
+	router.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
