@@ -4,8 +4,11 @@ package main
 // https://golang.org/doc/articles/wiki/
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
@@ -28,8 +31,54 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/delete", deleteHandler).Methods("POST")
 }
 
-func main() {
+func setDb() {
+	db, err := sql.Open("mysql", "root:@/mysql")
+	if err != nil {
+		log.Printf("Error connecting to database. %s", err.Error())
+	}
+	defer db.Close()
 
+	rows, err := db.Query("SELECT * FROM users")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	columns, err := rows.Columns()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	values := make([]sql.RawBytes, len(columns))
+
+	scanArgs := make([]interface{}, len(values))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+
+	for rows.Next() {
+		err = rows.Scan(scanArgs...)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		var value string
+		for i, col := range values {
+			if col == nil {
+				value = "NULL"
+			} else {
+				value = string(col)
+			}
+			log.Println(columns[i], ": ", value)
+		}
+		log.Println("--------")
+	}
+	if err = rows.Err(); err != nil {
+		panic(err.Error())
+	}
+}
+
+func main() {
+	setDb()
 	setHandleFunc(router)
 
 	http.Handle("/", router)
