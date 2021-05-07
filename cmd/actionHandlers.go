@@ -12,19 +12,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	redirectTarget := "/"
-	// .. check credentials .. TODO
 	u := createUser(name, "")
 	ie := InfoErr{}
-	var password string
-	if isExistingUsername(name, &password) {
-		log.Printf("User %s found pass %s.", name, password)
-		if isCorrectPassword(pass, password) {
+	if isExistingUsername(name, &u) {
+		log.Printf("User %s found.", name)
+		if isCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
 			u.Password = "correct"
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
-			ie.PasswordErr = "Incorrect password." // TODO err msg
+			ie.PasswordErr = "Incorrect password."
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
@@ -53,7 +51,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	ie := InfoErr{}
 	if isValidUsername(name) {
 		var pass string
-		if isExistingUsername(name, &pass) {
+		if isExistingUsername(name, &u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if isValidPassword(pass) {

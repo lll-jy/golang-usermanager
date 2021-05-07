@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 
+	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,15 +20,14 @@ func isValidPassword(password string) bool {
 	return length <= 20 && length >= 4
 }
 
-func isExistingUsername(username string, password *string) bool {
-	query, err := db.Prepare("SELECT password FROM users WHERE username = ?")
+func isExistingUsername(username string, user *protocol.User) bool {
+	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ?")
 	if err != nil {
 		log.Printf("Cannot parse query: %s", err.Error())
 		return false
 	}
 	defer query.Close()
-	err = query.QueryRow(username).Scan(password)
-	log.Printf("%s pass: %s", username, *password)
+	err = query.QueryRow(username).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
 	return err == nil
 }
 

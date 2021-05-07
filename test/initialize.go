@@ -21,17 +21,22 @@ func executeQuery(db *sql.DB, query string, args ...interface{}) {
 
 func initialize(db *sql.DB) {
 	executeQuery(db, "DROP TABLE IF EXISTS users")
-	/*executeQuery(db, `CREATE TABLE users (
+	executeQuery(db, `CREATE TABLE users (
 		username    VARCHAR(20) PRIMARY KEY,
 		password    VARCHAR(20) NOT NULL,
 		photo       VARCHAR(50),
-		nickanme    VARCHAR(30) COLLATE Latin1_General_100_CI_AI_SC_UTF8
-	)`)*/
-	executeQuery(db, `CREATE TABLE users (
+		nickname    VARCHAR(30) COLLATE Latin1_General_100_CI_AI_SC_UTF8
+	)`)
+	/*executeQuery(db, `CREATE TABLE users (
 		username	VARCHAR(20) PRIMARY KEY,
 		password	VARCHAR(20) NOT NULL
-	)`)
+	)`)*/
 	for i := 0; i < 30; i++ {
-		executeQuery(db, "INSERT INTO users VALUES(?, ?)", fmt.Sprintf("user%d", i), fmt.Sprintf("pass%d%d", i*2, i*2))
+		executeQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
+			fmt.Sprintf("user%d", i),
+			fmt.Sprintf("pass%d%d", i*2, i*2),
+			fmt.Sprintf("photo%d", i),
+			fmt.Sprintf("nick%d", i),
+		)
 	}
 }
