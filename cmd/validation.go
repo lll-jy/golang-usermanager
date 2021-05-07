@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"regexp"
 
@@ -30,10 +29,16 @@ func isExistingUsername(username string, user *protocol.User) bool {
 	defer query.Close()
 	user.Password = ""
 	query.QueryRow(username, user.Name).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
-	return user.Password != ""
+	if user.Password != "" {
+		if user.PhotoUrl == "" {
+			user.PhotoUrl = "assets/placeholder.jpeg" // EXTEND: maybe some cloud space
+		}
+		return true
+	} else {
+		return false
+	}
 }
 
 func isCorrectPassword(userpass string, password string) bool {
-	fmt.Println("check:", userpass, password)
 	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userpass)) == nil
 }

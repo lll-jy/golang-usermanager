@@ -33,6 +33,7 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/edit", editHandler).Methods("POST")
 	router.HandleFunc("/reset", resetHandler).Methods("POST")
 	router.HandleFunc("/delete", deleteHandler).Methods("POST")
+	router.HandleFunc("/upload", uploadHandler).Methods("POST")
 }
 
 func tryConnection(db *sql.DB) {
@@ -124,6 +125,11 @@ func main() {
 	}
 	fmt.Println(rows)*/
 	setHandleFunc(router)
+
+	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
+	staticFileDir := http.Dir("./assets")
+	staticFileHandler := http.StripPrefix("/assets/", http.FileServer(staticFileDir))
+	router.PathPrefix("/assets/").Handler(staticFileHandler).Methods("GET")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)

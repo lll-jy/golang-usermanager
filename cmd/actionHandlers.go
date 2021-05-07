@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -113,6 +114,36 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User information of %s updated.", info.User.Name)
 		setSession(info.User, info.InfoErr, w)
 		http.Redirect(w, r, "/view", 302)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
+// https://tutorialedge.net/golang/go-file-upload-tutorial/
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		r.ParseMultipartForm(10 << 20) // < 10 MB files
+		file, handler, err := r.FormFile("photo_file")
+		if err != nil {
+			log.Println("Error retrieving file.")
+			return
+		}
+		defer file.Close()
+		log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
+		targetDir := "../../../Desktop/EntryTask/entry-task/test/data/upload" // EXTEND: May set to some cloud space
+		tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
+		if err != nil {
+			log.Println("Error generating temporary file.")
+			log.Println(err)
+		}
+		defer tempFile.Close()
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			log.Println("Error reading file.")
+		}
+		tempFile.Write(fileBytes)
+		log.Println("Successfully uploaded file")
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}

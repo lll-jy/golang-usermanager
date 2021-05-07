@@ -1,4 +1,9 @@
 <h1>Edit profile of {{printf "%s" .User.Name}}</h1>
+<form enctype="multipart/form-data" action="/upload" method="POST">
+    <input type="file" name="photo_file" />
+    <input type="submit" value="Upload" />
+</form>
+<img src="assets/placeholder.jpeg" alt="profile photo" width="300px">
 <form method="POST" action="/edit">
     <label for="photo">Photo</label>
     <input type="text" id="photo" name="photo" value={{.User.PhotoUrl}}>
