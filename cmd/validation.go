@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -20,6 +21,14 @@ func isValidPassword(password string) bool {
 	return length <= 20 && length >= 4
 }
 
+func convertToString(i interface{}) string {
+	s := fmt.Sprintf("%s", i)
+	if s == "%!s(<nil>)" {
+		s = ""
+	}
+	return s
+}
+
 func isExistingUsername(username string, user *protocol.User) bool {
 	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
 	if err != nil {
@@ -28,11 +37,16 @@ func isExistingUsername(username string, user *protocol.User) bool {
 	}
 	defer query.Close()
 	user.Password = ""
-	query.QueryRow(username, user.Name).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
+	var p, pu, nn interface{}
+	query.QueryRow(username, user.Name).Scan(&p, &pu, &nn)
+	user.Password = convertToString(p)
+	user.PhotoUrl = convertToString(pu)
+	user.Nickname = convertToString(nn)
 	if user.Password != "" {
 		if user.PhotoUrl == "" {
 			user.PhotoUrl = "assets/placeholder.jpeg" // EXTEND: maybe some cloud space
 		}
+		fmt.Printf("you are here: %v\n", user)
 		return true
 	} else {
 		return false

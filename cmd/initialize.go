@@ -33,8 +33,8 @@ func initialize(db *sql.DB) {
 		}
 		executeQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
 			fmt.Sprintf("user%d", i),
-			pass,
-			fmt.Sprintf("photo%d", i),
+			pass, nil,
+			//fmt.Sprintf("photo%d", i),
 			fmt.Sprintf("nick%d", i),
 		)
 	}
