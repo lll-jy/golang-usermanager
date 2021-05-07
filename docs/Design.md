@@ -84,14 +84,14 @@ Only on table is needed, so ER diagram is not needed. The table creation query i
 ```
 CREATE TABLE users (
     username    VARCHAR(20) PRIMARY KEY,
-    password    VARCHAR(20) NOT NULL,
+    password    VARCHAR(100) NOT NULL,
     photo       VARCHAR(50),
     nickanme    VARCHAR(30) COLLATE Latin1_General_100_CI_AI_SC_UTF8
 );
 ```
 
 ### Username
-The username is the primary key that uniquely identifies each user. The username should be a 4-20 character string containing numbers, letters, and hyphens ("-") only, and duplicate username is not allowed.
+The username is the primary key that uniquely identifies each user. The username should be a 4-20 character string containing numbers, letters, hyphens ("-"), and underscores ("_") only, and the first character must be a letter. Duplicate username is not allowed.
 
 ### Password
 The password should not be null, and the password that user provides should be a 4-20 character string. The original password is hashed before it is saved to the database.
