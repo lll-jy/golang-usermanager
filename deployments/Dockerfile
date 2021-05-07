@@ -13,13 +13,13 @@ RUN go get -d -v ./...
 
 RUN go install -v ./...
 
-RUN go build cmd/main.go
+RUN go build -o usermanager cmd/*.go
 
 ENV PORT 8080
 
 EXPOSE 8080
 
-CMD ["./main"]
+CMD ["./usermanager"]
 
 
 # docker build --tag first  -f deployments/Dockerfile .
