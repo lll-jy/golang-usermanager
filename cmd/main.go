@@ -106,11 +106,6 @@ func main() {
 	defer db.Close()
 	// dummySelect(db)
 
-	// var pass string
-	// isExistingUsername("user0", &pass)
-	// isExistingUsername("user12", &pass)
-	// isExistingUsername("u", &pass)
-	// isExistingUsername("user30", &pass)
 	/*rows, err := db.Query("SELECT * FROM users")
 	if err != nil {
 		panic(err.Error())

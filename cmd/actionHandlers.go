@@ -13,21 +13,22 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	redirectTarget := "/"
 	// .. check credentials .. TODO
-	u := createUser(name, pass)
+	u := createUser(name, "")
 	ie := InfoErr{}
 	var password string
 	if isExistingUsername(name, &password) {
 		log.Printf("User %s found pass %s.", name, password)
 		if isCorrectPassword(pass, password) {
 			log.Printf("Login to %s successful!", name)
+			u.Password = "correct"
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
-			u.Password = ""
 			ie.PasswordErr = "Incorrect password." // TODO err msg
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
+		u.Password = pass
 		redirectTarget = "/signup"
 	}
 	setSession(&u, ie, w)

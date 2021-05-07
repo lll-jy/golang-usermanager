@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func isValidUsername(username string) bool {
@@ -12,9 +13,10 @@ func isValidUsername(username string) bool {
 	return validUsername.MatchString(username)
 }
 
-func isValidPassword(password string) bool { // TODO
-	var validPassword = regexp.MustCompile("^uu([a-z]+)$")
-	return validPassword.MatchString(password)
+func isValidPassword(password string) bool {
+	// 4-20 characters, case sensitive
+	length := len(password)
+	return length <= 20 && length >= 4
 }
 
 func isExistingUsername(username string, password *string) bool {
@@ -29,7 +31,11 @@ func isExistingUsername(username string, password *string) bool {
 	return err == nil
 }
 
-func isCorrectPassword(userpass string, password string) bool { // TODO
-	fmt.Printf("user: %s, pass: %s\n", userpass, password)
-	return userpass == password
+func isCorrectPassword(userpass string, password string) bool {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(userpass), 3)
+	if err != nil {
+		log.Printf("Cannot hash user password %s", userpass)
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password)) == nil
 }
