@@ -23,4 +23,4 @@ CMD ["./usermanager"]
 
 
 # docker build --tag first  -f deployments/Dockerfile .
-# docker run -p 8080:80 --name first -d first
+# docker run -p 8080:8080 --name first -d first

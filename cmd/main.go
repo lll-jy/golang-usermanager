@@ -2,11 +2,14 @@ package main
 
 // https://gist.github.com/mschoebel/9398202
 // https://golang.org/doc/articles/wiki/
+// https://github.com/go-sql-driver/mysql/wiki/Examples
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -15,6 +18,7 @@ import (
 // server main method
 
 var router = mux.NewRouter()
+var db *sql.DB
 
 func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/", indexPageHandler)
@@ -31,13 +35,25 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/delete", deleteHandler).Methods("POST")
 }
 
-func setDb() {
-	db, err := sql.Open("mysql", "root:@/mysql")
-	if err != nil {
-		log.Printf("Error connecting to database. %s", err.Error())
-	}
-	defer db.Close()
+func tryConnection(db *sql.DB) {
+	retryCount := 30
+	for {
+		err := db.Ping()
+		if err != nil {
+			if retryCount == 0 {
+				log.Fatalf("Not able to establish connection to database")
+			}
 
+			log.Printf(fmt.Sprintf("Could not connect to database. Wait 2 seconds. %d retries left...", retryCount))
+			retryCount--
+			time.Sleep(2 * time.Second)
+		} else {
+			break
+		}
+	}
+}
+
+func dummySelect(db *sql.DB) {
 	rows, err := db.Query("SELECT * FROM users")
 	if err != nil {
 		panic(err.Error())
@@ -77,8 +93,18 @@ func setDb() {
 	}
 }
 
+func setDb() {
+	var err error
+	db, err = sql.Open("mysql", "root:@/mysql")
+	if err != nil {
+		log.Printf("Error connecting to database. %s", err.Error())
+	}
+}
+
 func main() {
-	setDb()
+	// setDb()
+	// defer db.Close()
+	// dummySelect(db)
 	setHandleFunc(router)
 
 	http.Handle("/", router)

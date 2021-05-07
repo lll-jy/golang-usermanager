@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+    web:
+        build:
+            context: ../.
+            dockerfile: ./deployments/app.dockerfile
+        ports:
+            - 8080:8080
+        volumes:
+            - .:/golang-docker
+        depends_on:
+            - database
+        container_name: golang-docker-web
+        environment:
+            - 'DB_PORT=3306'
+            - 'DB_HOST=database'
+  
+    database:
+        image: mysql:5.7.22
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: root
+            MYSQL_PASSWORD: 
+            MYSQL_DATABASE: mysql
+            MYSQL_HOST: golang-docker-web
+        container_name: golang-docker-db
+        ports:
+            - 33066:3306
+        volumes:
+            - golang-docker-data:/var/lib/mysql 
+        #     - ./deployments/init.sql:/data/init.sql
+        # command: --init-file /data/init.sql
+        # command: "mysql -uroot < deployments/init.sql"
+  
+  
+# persisted storage
+volumes:
+    golang-docker-data:
+
+# https://medium.com/wesionary-team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5
+# docker-compose -f deployments/docker-compose.yml
