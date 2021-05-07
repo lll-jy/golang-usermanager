@@ -122,7 +122,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
 		log.Printf("Initial photo at %s", info.InitialPhoto)
-		if info.InitialPhoto != "" && info.InitialPhoto != "/assets/placeholder.jpeg" {
+		if info.InitialPhoto != "" && info.InitialPhoto != "assets/placeholder.jpeg" {
 			err := os.Remove(info.InitialPhoto)
 			if err == nil {
 				log.Printf("Removed original photo from database.")
