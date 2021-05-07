@@ -29,7 +29,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
 		redirectTarget = "/signup"
 	}
-	setSession(u, ie, w)
+	setSession(&u, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -69,7 +69,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		log.Printf("User signup failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid." // TODO requirement
 	}
-	setSession(u, ie, w)
+	setSession(&u, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 

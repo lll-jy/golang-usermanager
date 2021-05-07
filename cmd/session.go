@@ -1,10 +1,12 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	"github.com/gorilla/securecookie"
+	"google.golang.org/protobuf/proto"
 )
 
 var cookieHandler = securecookie.New(
@@ -28,7 +30,7 @@ type InfoErr struct {
 }
 
 type PageInfo struct {
-	User         protocol.User
+	User         *protocol.User
 	InfoErr      InfoErr
 	DisplayName  string
 	Action       string
@@ -37,30 +39,22 @@ type PageInfo struct {
 }
 
 func getPageInfo(r *http.Request) (info PageInfo) {
-	var username string
-	var password string
-	var photo string
-	var nickname string
+	var user string
 	var nameErr string
 	var passErr string
 	var repeatPassErr string
 	if cookie, err := r.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
-			username = cookieValue["name"]
-			password = cookieValue["pass"]
-			photo = cookieValue["photo"]
-			nickname = cookieValue["nickname"]
+			user = cookieValue["user"]
 			nameErr = cookieValue["nameErr"]
 			passErr = cookieValue["passErr"]
 			repeatPassErr = cookieValue["repeatPassErr"]
 		}
 	}
-	u := protocol.User{
-		Name:     username,
-		Password: password,
-		PhotoUrl: photo,
-		Nickname: nickname,
+	u := &protocol.User{}
+	if err := proto.Unmarshal([]uint8(user), u); err != nil {
+		log.Printf("Error: wrong format! %s cannot be parsed as a user.", user)
 	}
 	ie := InfoErr{
 		UsernameErr:       nameErr,
@@ -73,12 +67,13 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	}
 }
 
-func setSession(u protocol.User, uie InfoErr, w http.ResponseWriter) {
+func setSession(u *protocol.User, uie InfoErr, w http.ResponseWriter) {
+	user, err := proto.Marshal(u)
+	if err != nil {
+		log.Printf("Error: wrong format! %s cannot be parsed as a user.", u)
+	}
 	value := map[string]string{
-		"name":          u.Name,
-		"pass":          u.Password,
-		"photo":         u.PhotoUrl,
-		"nickname":      u.Nickname,
+		"user":          string(user),
 		"nameErr":       uie.UsernameErr,
 		"passErr":       uie.PasswordErr,
 		"repeatPassErr": uie.PasswordRepeatErr,
