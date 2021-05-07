@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -34,7 +35,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		redirectTarget = "/signup"
 	}
 	u.Name = name
-	setSession(&u, ie, w)
+	setSession(&u, ie, "", w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -87,7 +88,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		log.Printf("User signup failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid."
 	}
-	setSession(&u, ie, w)
+	setSession(&u, ie, "", w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -109,7 +110,6 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 func editHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		//info.User.PhotoUrl = r.FormValue("photo")
 		info.User.Nickname = r.FormValue("nickname")
 		photo := interface{}(info.User.PhotoUrl)
 		if info.User.PhotoUrl == "assets/placeholder.jpeg" || info.User.PhotoUrl == "" {
@@ -121,7 +121,16 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
-		setSession(info.User, info.InfoErr, w)
+		log.Printf("Initial photo at %s", info.InitialPhoto)
+		if info.InitialPhoto != "" && info.InitialPhoto != "/assets/placeholder.jpeg" {
+			err := os.Remove(info.InitialPhoto)
+			if err == nil {
+				log.Printf("Removed original photo from database.")
+			} else {
+				log.Printf(err.Error())
+			}
+		}
+		setSession(info.User, info.InfoErr, "", w)
 		http.Redirect(w, r, "/view", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
@@ -131,6 +140,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
+	initial := info.User.PhotoUrl
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
@@ -153,7 +163,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			tempFile.Write(fileBytes)
 			dirs := strings.Split(tempFile.Name(), "/")
 			info.User.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
-			setSession(info.User, info.InfoErr, w)
+			setSession(info.User, info.InfoErr, initial, w)
 			log.Println("Successfully uploaded file")
 		}
 		http.Redirect(w, r, "/edit", 302)

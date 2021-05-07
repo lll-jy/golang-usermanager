@@ -5,13 +5,8 @@
 </form>
 <img src={{.User.PhotoUrl}} alt="profile photo" width="300px">
 <form method="POST" action="/edit">
-    <label for="photo">Photo</label>
-    <input type="text" id="photo" name="photo" value={{.User.PhotoUrl}}>
-    <err style="font-size: small; color: red;">d</err>
-    <br><br>
     <label for="nickname">Nickname</label>
     <input type="text" id="nickname" name="nickname" value={{.User.Nickname}}>
-    <err style="font-size: small; color: red;">d</err>
     <br><br>
     <button type="submit">Save</button>
     <a href="/view"><button type="button">Cancel</button></a>
