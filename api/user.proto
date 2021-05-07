@@ -9,3 +9,5 @@ message User {
     string photoUrl = 3;
     string nickname = 4;
 }
+
+// protoc -I=api --go_out=cmd api/user.proto
