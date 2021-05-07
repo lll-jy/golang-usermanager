@@ -101,6 +101,18 @@ func setDb() {
 	}
 }
 
+func executeQuery(db *sql.DB, query string, args ...interface{}) {
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
+	}
+}
+
 func main() {
 	setDb()
 	defer db.Close()

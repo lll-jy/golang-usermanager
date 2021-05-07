@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -27,15 +28,14 @@ func isExistingUsername(username string, user *protocol.User) bool {
 		return false
 	}
 	defer query.Close()
-	err = query.QueryRow(username).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
-	return err == nil
+	user.Password = ""
+	fmt.Println("before", user)
+	query.QueryRow(username).Scan(&user.Password, &user.PhotoUrl, &user.Nickname)
+	fmt.Println(user)
+	return user.Password != ""
 }
 
 func isCorrectPassword(userpass string, password string) bool {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(userpass), 3)
-	if err != nil {
-		log.Printf("Cannot hash user password %s", userpass)
-		return false
-	}
-	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password)) == nil
+	fmt.Println("check:", userpass, password)
+	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userpass)) == nil
 }

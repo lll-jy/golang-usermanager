@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // login handler
@@ -37,6 +39,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	clearSession(w)
+	log.Printf("User %s logged out.", getPageInfo(r).User.Name)
 	http.Redirect(w, r, "/", 302)
 }
 
@@ -50,14 +53,20 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	u := createUser(name, pass)
 	ie := InfoErr{}
 	if isValidUsername(name) {
-		var pass string
 		if isExistingUsername(name, &u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
+			u = createUser(name, pass)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if isValidPassword(pass) {
 			if pass == repeatPass {
 				log.Printf("New user %s signed up.", name)
-				redirectTarget = tgt // TODO: insert
+				hashed, err := bcrypt.GenerateFromPassword([]byte(pass), 3)
+				if err != nil {
+					log.Printf("Error: password %s cannot be hashed.", pass)
+				}
+				executeQuery(db, "INSERT INTO users VALUES (?, ?, NULL, NULL)", u.Name, hashed)
+				u.Password = "correct"
+				redirectTarget = tgt
 			} else {
 				log.Printf("User signup failure: password does not match.")
 				ie.PasswordRepeatErr = "The password does not match."
