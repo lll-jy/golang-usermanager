@@ -14,7 +14,7 @@ import (
 // login handler
 
 func decryptPhoto(url string, pass string, name string, photo *string) {
-	if url == "" {
+	if url == "" || url == "assets/placeholder.jpeg" {
 		*photo = "assets/placeholder.jpeg"
 	} else {
 		encrypted, err := ioutil.ReadFile(url)
@@ -146,7 +146,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("photo: %v, nickname: %v\n", photo, nickname)
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
-		if info.User.PhotoUrl != "" && info.User.PhotoUrl != "assets/placeholder.jpeg" && info.TempUser.PhotoUrl != info.User.PhotoUrl { // TODO
+		if info.User.PhotoUrl != "" && info.User.PhotoUrl != "assets/placeholder.jpeg" {
 			err := os.Remove(info.User.PhotoUrl)
 			if err == nil {
 				log.Printf("Removed original photo from database.")
@@ -199,13 +199,34 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // discard handler
+
 func discardHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		os.Remove(info.Photo)
-		decryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
+		if info.User.PhotoUrl != "" && info.User.PhotoUrl != "assets/placeholder.jpeg" {
+			os.Remove(info.Photo)
+			decryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
+			log.Printf("Temporary file removed.")
+		} else {
+			log.Printf("No file to remove.")
+		}
 		info.TempUser.PhotoUrl = info.User.PhotoUrl
+		setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 		http.Redirect(w, r, "/view", 302)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
+// remove handler
+
+func removeHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		os.Remove(info.Photo)
+		setSession(info.User, info.TempUser, info.InfoErr, "assets/placeholder.jpeg", w)
+		executeQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
+		http.Redirect(w, r, "/edit", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}
