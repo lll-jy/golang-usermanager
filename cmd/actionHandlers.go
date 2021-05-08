@@ -84,7 +84,9 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if isValidPassword(pass) {
 			if pass == repeatPass {
-				log.Printf("New user %s signed up.", name)
+				if rt == "/signup" {
+					log.Printf("New user %s signed up.", name)
+				}
 				hashed, err := bcrypt.GenerateFromPassword([]byte(pass), 3)
 				if err != nil {
 					log.Printf("Error: password %s cannot be hashed.", pass)
@@ -115,16 +117,16 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				tu.Nickname = u.Nickname
 				redirectTarget = tgt
 			} else {
-				log.Printf("User signup failure: password does not match.")
+				log.Printf("User signup/reset failure: password does not match.")
 				ie.PasswordRepeatErr = "The password does not match."
 			}
 		} else {
-			log.Printf("User signup failure: password format invalid.")
+			log.Printf("User signup/reset failure: password format invalid.")
 			u.Name = name
 			ie.PasswordErr = "The password is not valid."
 		}
 	} else {
-		log.Printf("User signup failture: invalid username format of %s.", name)
+		log.Printf("User signup/reset failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid."
 	}
 	setSession(u, &tu, ie, info.Photo, w)
