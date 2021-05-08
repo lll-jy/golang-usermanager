@@ -20,3 +20,17 @@ func Test_dummy(t *testing.T) {
 func PlayerServer(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "20")
 }
+
+func TestSetCookie(t *testing.T) {
+	response := httptest.NewRecorder()
+	http.SetCookie(response, &http.Cookie{
+		Name:  "test",
+		Value: "hello",
+	})
+	request, _ := http.NewRequest(http.MethodGet, "/", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+
+	cookie, _ := request.Cookie("test")
+
+	fmt.Println(cookie.Value)
+}
