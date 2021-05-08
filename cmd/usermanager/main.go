@@ -19,10 +19,6 @@ import (
 
 var router = mux.NewRouter()
 var db *sql.DB
-var placeholderPath = "assets/placeholder.jpeg"
-var fileBasePath = "../../../Desktop/EntryTask/entry-task/test/data/upload" // EXTEND: May set to some cloud space
-var fileBaseRelativePath = "test/data/upload"
-var tempPath = "test/data/temp" // local device
 
 func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/", indexPageHandler)

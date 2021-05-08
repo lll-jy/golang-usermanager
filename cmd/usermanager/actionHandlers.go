@@ -8,7 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+
 	//"./protocol"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -16,15 +18,15 @@ import (
 // login handler
 
 func decryptPhoto(url string, pass string, name string, photo *string) {
-	if url == "" || url == placeholderPath {
-		*photo = placeholderPath
+	if url == "" || url == paths.PlaceholderPath {
+		*photo = paths.PlaceholderPath
 	} else {
 		encrypted, err := ioutil.ReadFile(url)
 		if err != nil {
 			log.Printf("The encrypted file is invalid.")
 		}
 		decrypted := decrypt(encrypted, pass)
-		*photo = fmt.Sprintf("%s/user%s.jpeg", tempPath, name)
+		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
 		ioutil.WriteFile(*photo, decrypted, 0600)
 	}
 }
@@ -65,7 +67,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	clearSession(w)
 	log.Printf("User %s logged out.", info.User.Name)
-	if info.Photo != "" && info.Photo != placeholderPath {
+	if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 		os.Remove(info.Photo)
 	}
 	http.Redirect(w, r, "/", 302)
@@ -102,7 +104,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				}
 				u.Name = name
 				u.Password = string(hashed)
-				if info.Photo != "" && info.Photo != placeholderPath {
+				if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 					os.Remove(u.PhotoUrl)
 					if err != nil {
 						log.Printf("The original file path is invalid.")
@@ -157,7 +159,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	if info.User.Password != "" {
 		info.TempUser.Nickname = r.FormValue("nickname")
 		photo := interface{}(info.TempUser.PhotoUrl)
-		if info.TempUser.PhotoUrl == placeholderPath || info.TempUser.PhotoUrl == "" {
+		if info.TempUser.PhotoUrl == paths.PlaceholderPath || info.TempUser.PhotoUrl == "" {
 			photo = nil
 		}
 		nickname := interface{}(info.TempUser.Nickname)
@@ -166,7 +168,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
-		if info.User.PhotoUrl != "" && info.User.PhotoUrl != placeholderPath {
+		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 			err := os.Remove(info.User.PhotoUrl)
 			if err == nil {
 				log.Printf("Removed original photo from database.")
@@ -194,7 +196,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			defer file.Close()
 			log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
-			targetDir := fileBasePath
+			targetDir := paths.FileBasePath
 			tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
 			if err != nil {
 				log.Println("Error generating temporary file.")
@@ -206,7 +208,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
 			dirs := strings.Split(tempFile.Name(), "/")
-			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", fileBaseRelativePath, dirs[len(dirs)-1]) // EXTEND: same as above
+			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", paths.FileBaseRelativePath, dirs[len(dirs)-1]) // EXTEND: same as above
 			decryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
@@ -222,7 +224,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func discardHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		if info.User.PhotoUrl != "" && info.User.PhotoUrl != placeholderPath {
+		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 			os.Remove(info.Photo)
 			decryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
 			log.Printf("Temporary file removed.")
@@ -242,10 +244,10 @@ func discardHandler(w http.ResponseWriter, r *http.Request) {
 func removeHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		if info.Photo != "" && info.Photo != placeholderPath {
+		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.Photo)
 		}
-		setSession(info.User, info.TempUser, info.InfoErr, placeholderPath, w)
+		setSession(info.User, info.TempUser, info.InfoErr, paths.PlaceholderPath, w)
 		executeQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
 		http.Redirect(w, r, "/edit", 302)
 		log.Printf("Removed profile photo for user %s", info.User.Name)
@@ -262,10 +264,10 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		name := info.User.Name
 		executeQuery(db, "DELETE FROM users WHERE username = ?", name)
 		log.Printf("User %s deleted.", name)
-		if info.Photo != "" && info.Photo != placeholderPath {
+		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.Photo)
 		}
-		if info.Photo != "" && info.Photo != placeholderPath {
+		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.User.PhotoUrl)
 		}
 		clearSession(w)

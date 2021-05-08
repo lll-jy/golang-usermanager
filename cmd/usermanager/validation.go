@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,7 +31,7 @@ func isExistingUsername(username string, user *protocol.User) bool {
 	user.Nickname = convertToString(nn)
 	if user.Password != "" {
 		if user.PhotoUrl == "" {
-			user.PhotoUrl = placeholderPath // EXTEND: maybe some cloud space
+			user.PhotoUrl = paths.PlaceholderPath // EXTEND: maybe some cloud space
 		}
 		return true
 	} else {
