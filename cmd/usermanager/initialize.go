@@ -20,7 +20,7 @@ func initialize(db *sql.DB) {
 		username    VARCHAR(20) PRIMARY KEY,
 		password    VARCHAR(100) NOT NULL,
 		photo       VARCHAR(50),
-		nickname    VARCHAR(30)
+		nickname    VARCHAR(30) COLLATE utf8mb4_unicode_ci
 	)`)
 	/*executeQuery(db, `CREATE TABLE users (
 		username	VARCHAR(20) PRIMARY KEY,
@@ -34,7 +34,6 @@ func initialize(db *sql.DB) {
 		executeQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
 			fmt.Sprintf("user%d", i),
 			pass, nil,
-			//fmt.Sprintf("photo%d", i),
 			fmt.Sprintf("nick%d", i),
 		)
 	}

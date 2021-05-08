@@ -96,8 +96,14 @@ CREATE TABLE users (
     username    VARCHAR(20) PRIMARY KEY,
     password    VARCHAR(100) NOT NULL,
     photo       VARCHAR(50),
-    nickanme    VARCHAR(30) COLLATE Latin1_General_100_CI_AI_SC_UTF8
+    nickanme    VARCHAR(30) COLLATE utf8mb4_unicode_ci
 );
+```
+
+To integrate UTF8 encoding, before creating the table, the following query is run.
+
+```
+ALTER DATABASE EntryTask CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 ```
 
 ### Username
