@@ -22,10 +22,6 @@ func initialize(db *sql.DB) {
 		photo       VARCHAR(50),
 		nickname    VARCHAR(30) COLLATE utf8mb4_unicode_ci
 	)`)
-	/*executeQuery(db, `CREATE TABLE users (
-		username	VARCHAR(20) PRIMARY KEY,
-		password	VARCHAR(20) NOT NULL
-	)`)*/
 	for i := 0; i < 30; i++ {
 		pass, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
 		if err != nil {

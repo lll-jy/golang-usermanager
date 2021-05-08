@@ -65,7 +65,9 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	clearSession(w)
 	log.Printf("User %s logged out.", info.User.Name)
-	os.Remove(info.Photo)
+	if info.Photo != "" && info.Photo != placeholderPath {
+		os.Remove(info.Photo)
+	}
 	http.Redirect(w, r, "/", 302)
 }
 
@@ -240,7 +242,9 @@ func discardHandler(w http.ResponseWriter, r *http.Request) {
 func removeHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		os.Remove(info.Photo)
+		if info.Photo != "" && info.Photo != placeholderPath {
+			os.Remove(info.Photo)
+		}
 		setSession(info.User, info.TempUser, info.InfoErr, placeholderPath, w)
 		executeQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
 		http.Redirect(w, r, "/edit", 302)
@@ -258,8 +262,12 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		name := info.User.Name
 		executeQuery(db, "DELETE FROM users WHERE username = ?", name)
 		log.Printf("User %s deleted.", name)
-		os.Remove(info.Photo)
-		os.Remove(info.User.PhotoUrl)
+		if info.Photo != "" && info.Photo != placeholderPath {
+			os.Remove(info.Photo)
+		}
+		if info.Photo != "" && info.Photo != placeholderPath {
+			os.Remove(info.User.PhotoUrl)
+		}
 		clearSession(w)
 	}
 	http.Redirect(w, r, "/", 302)

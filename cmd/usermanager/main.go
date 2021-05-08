@@ -83,7 +83,6 @@ func executeQuery(db *sql.DB, query string, args ...interface{}) {
 func main() {
 	setDb()
 	defer db.Close()
-	initialize(db)
 
 	setHandleFunc(router)
 
