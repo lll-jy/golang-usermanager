@@ -13,6 +13,20 @@ import (
 
 // login handler
 
+func decryptPhoto(url string, pass string, name string, photo *string) {
+	if url == "" {
+		*photo = "assets/placeholder.jpeg"
+	} else {
+		encrypted, err := ioutil.ReadFile(url)
+		if err != nil {
+			log.Printf("The encrypted file is invalid.")
+		}
+		decrypted := decrypt(encrypted, pass)
+		*photo = fmt.Sprintf("test/data/temp/user%s.jpeg", name)
+		ioutil.WriteFile(*photo, decrypted, 0600)
+	}
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
@@ -20,6 +34,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	u := createUser("", "")
 	tu := createUser(name, pass)
 	ie := InfoErr{}
+	photo := ""
 	if isExistingUsername(name, &u) {
 		log.Printf("User %s found.", name)
 		if isCorrectPassword(pass, u.Password) {
@@ -27,6 +42,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			// u.Password = pass //"correct"
 			u.Name = name
 			// TODO: DECRYPT
+			decryptPhoto(u.PhotoUrl, pass, name, &photo)
 			tu = u
 			tu.Password = pass
 			redirectTarget = "/view"
@@ -41,7 +57,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// u.Name = name
 	// setSession(&u, ie, "", w)
-	setSession(&u, &tu, ie, w)
+	setSession(&u, &tu, ie, photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -90,11 +106,12 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				// fmt.Println(&tu)
 				u.Name = name
 				u.Password = string(hashed)
-				if u.PhotoUrl == "" {
+				/*if u.PhotoUrl == "" {
 					tu.PhotoUrl = "assets/placeholder.jpeg"
 				} else {
 					tu.PhotoUrl = u.PhotoUrl
-				}
+				}*/
+				decryptPhoto(u.PhotoUrl, name, pass, &info.Photo)
 				tu.Nickname = u.Nickname
 				// TODO: ENCRYPT
 				redirectTarget = tgt
@@ -114,7 +131,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		ie.UsernameErr = "The username format is not valid."
 	}
 	// setSession(&u, ie, "", w)
-	setSession(u, &tu, ie, w)
+	setSession(u, &tu, ie, info.Photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -158,7 +175,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		info.User.PhotoUrl = convertToString(photo)
 		info.User.Nickname = info.TempUser.Nickname
-		setSession(info.User, info.TempUser, info.InfoErr, w)
+		setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 		http.Redirect(w, r, "/view", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
@@ -195,7 +212,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			// client := encryption.NewClient()
 			// encrypt(file, info.TempUser.Password, &info, client)
 			// decrypt(info.TempUser.PhotoUrl, info.TempUser.Password, &info, client)
-			setSession(info.User, info.TempUser, info.InfoErr, w)
+			decryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
+			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
 		}
 		http.Redirect(w, r, "/edit", 302)

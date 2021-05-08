@@ -3,7 +3,7 @@
     <input type="file" name="photo_file" />
     <input type="submit" value="Upload" />
 </form>
-<img src={{.TempUser.PhotoUrl}} alt="profile photo" width="300px">
+<img src={{.Photo}} alt="profile photo" width="300px">
 <form method="POST" action="/edit">
     <label for="nickname">Nickname</label>
     <input type="text" id="nickname" name="nickname" value={{.TempUser.Nickname}}>
