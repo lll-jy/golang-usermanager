@@ -39,12 +39,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User %s found.", name)
 		if isCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
-			// u.Password = pass //"correct"
 			u.Name = name
-			// TODO: DECRYPT
 			decryptPhoto(u.PhotoUrl, pass, name, &photo)
-			tu = u
-			tu.Password = pass
+			tu.PhotoUrl = u.PhotoUrl
+			tu.Nickname = u.Nickname
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
@@ -55,8 +53,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
 		redirectTarget = "/signup"
 	}
-	// u.Name = name
-	// setSession(&u, ie, "", w)
 	setSession(&u, &tu, ie, photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
@@ -64,9 +60,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 // logout handler
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
 	clearSession(w)
-	log.Printf("User %s logged out.", getPageInfo(r).User.Name)
-	// TODO: clar
+	log.Printf("User %s logged out.", info.User.Name)
+	os.Remove(info.Photo)
 	http.Redirect(w, r, "/", 302)
 }
 
@@ -77,7 +74,6 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
 	redirectTarget := rt
-	// u := createUser(getPageInfo(r).User.Name, pass)
 	info := getPageInfo(r)
 	u := info.User
 	tu := createUser(name, pass)
@@ -85,7 +81,6 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	if isValidUsername(name) {
 		if isExistingUsername(name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
-			// u = createUser(name, pass)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if isValidPassword(pass) {
 			if pass == repeatPass {
@@ -95,30 +90,17 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 					log.Printf("Error: password %s cannot be hashed.", pass)
 				}
 				executeQuery(db, query, name, hashed, tu.Name)
-				//u.Name = name
-				//u.Password = tu.Password //"correct"
 				if rt == "/reset" {
 					u.Name = ""
 					isExistingUsername(name, u)
 				}
-				// fmt.Println(isExistingUsername(name, u))
-				// fmt.Println(u)
-				// fmt.Println(&tu)
 				u.Name = name
 				u.Password = string(hashed)
-				/*if u.PhotoUrl == "" {
-					tu.PhotoUrl = "assets/placeholder.jpeg"
-				} else {
-					tu.PhotoUrl = u.PhotoUrl
-				}*/
 				decryptPhoto(u.PhotoUrl, name, pass, &info.Photo)
 				tu.Nickname = u.Nickname
-				// TODO: ENCRYPT
 				redirectTarget = tgt
 			} else {
 				log.Printf("User signup failure: password does not match.")
-				// u.Name = name
-				// u.Password = pass
 				ie.PasswordRepeatErr = "The password does not match."
 			}
 		} else {
@@ -130,7 +112,6 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		log.Printf("User signup failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid."
 	}
-	// setSession(&u, ie, "", w)
 	setSession(u, &tu, ie, info.Photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
@@ -185,7 +166,6 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
-	// initial := info.User.PhotoUrl
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
@@ -208,10 +188,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
 			dirs := strings.Split(tempFile.Name(), "/")
 			info.TempUser.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
-			// TODO: ENCRYPT
-			// client := encryption.NewClient()
-			// encrypt(file, info.TempUser.Password, &info, client)
-			// decrypt(info.TempUser.PhotoUrl, info.TempUser.Password, &info, client)
 			decryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
@@ -230,6 +206,8 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		name := info.User.Name
 		executeQuery(db, "DELETE FROM users WHERE username = ?", name)
 		log.Printf("User %s deleted.", name)
+		os.Remove(info.Photo)
+		os.Remove(info.User.PhotoUrl)
 		clearSession(w)
 	}
 	http.Redirect(w, r, "/", 302)
