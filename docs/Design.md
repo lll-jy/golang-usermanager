@@ -36,6 +36,8 @@ The app is a simple web application with the web app server connected to a datab
 | POST   | /edit            | Upgrade user profile in the database      |
 | GET    | /reset           | Reset user info page                      |
 | POST   | /reset           | Upgrade user info in the database         |
+| POST   | /discard         | Cancel on the edit page                   |
+| POST   | /remove          | Remove profile photo                      |
 * Note: user info refers to username and password, and user profile refers to the user profile photo and nickname.
 
 ### GET `/`
@@ -57,16 +59,16 @@ Successful login would result to `GET /view`.
 Unrecognized but valid username log in would redirect to `GET /signup`. The user can also choose to sign up directly.
 
 ### POST `/logout`
-User logs out and go back to the home page.
+User logs out and go back to the home page. Remove local photo file.
 
 ### GET `/view`
 Display the profile page to the user from the HTML template that allows the user to view the username, nickname, and profile photo, and choose to edit profile, reset password, or delete user.
 
 ### POST `/delete`
-Delete the user from the database and redirect to the homepage.
+Delete the user from the database (including the photo in the file base) and redirect to the homepage.
 
 ### GET `/edit`
-Display the edit profile page to the user from the HTML template that allows the user to (re-)upload profile photo and/or change a nickname.
+Display the edit profile page to the user from the HTML template that allows the user to (re-)upload profile photo and/or change a nickname. Remove unused photos when necessary.
 
 ### POST `/edit`
 Save the photo uploaded by the user and get its address. Then save the changes to the user profile to the database and redirect to `GET /view`.
@@ -76,6 +78,13 @@ Display the reset user info page to the user from the HTML template that allows 
 
 ### POST `/reset`
 Save the new user info and update the database accordingly. Then redirect to `GET /view`.
+
+### POST `/discard`
+Choosing 'Cancel' on the edit page, to discard the photo uploaded and use the original photo instead.
+
+### POST `/remove`
+Remove the profile photo for the user (and the file in the actual file base is to be deleted when the changes
+are saved, i.e. when the 'Save' button on the `/edit` page is clicked).
 
 ## Data Schema Design
 
