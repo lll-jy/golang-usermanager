@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
@@ -9,13 +8,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func convertToString(i interface{}) string {
+/*func protocol.ConvertToString(i interface{}) string {
 	s := fmt.Sprintf("%s", i)
 	if s == "%!s(<nil>)" {
 		s = ""
 	}
 	return s
-}
+}*/
 
 func isExistingUsername(username string, user *protocol.User) bool {
 	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
@@ -26,9 +25,9 @@ func isExistingUsername(username string, user *protocol.User) bool {
 	defer query.Close()
 	var p, pu, nn interface{}
 	query.QueryRow(username, user.Name).Scan(&p, &pu, &nn)
-	user.Password = convertToString(p)
-	user.PhotoUrl = convertToString(pu)
-	user.Nickname = convertToString(nn)
+	user.Password = protocol.ConvertToString(p)
+	user.PhotoUrl = protocol.ConvertToString(pu)
+	user.Nickname = protocol.ConvertToString(nn)
 	if user.Password != "" {
 		if user.PhotoUrl == "" {
 			user.PhotoUrl = paths.PlaceholderPath // EXTEND: maybe some cloud space

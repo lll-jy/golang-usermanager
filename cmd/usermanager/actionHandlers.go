@@ -176,7 +176,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf(err.Error())
 			}
 		}
-		info.User.PhotoUrl = convertToString(photo)
+		info.User.PhotoUrl = protocol.ConvertToString(photo)
 		info.User.Nickname = info.TempUser.Nickname
 		setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 		http.Redirect(w, r, "/view", 302)

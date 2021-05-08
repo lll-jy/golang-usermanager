@@ -38,7 +38,6 @@ type PageInfo struct {
 	Title        string
 	CancelAction string
 	Photo        string
-	// InitialPhoto string
 }
 
 func getPageInfo(r *http.Request) (info PageInfo) {
@@ -48,7 +47,6 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	var passErr string
 	var repeatPassErr string
 	var photo string
-	//var photo string
 	if cookie, err := r.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
 		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
@@ -81,7 +79,6 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	}
 }
 
-// func setSession(u *protocol.User, uie InfoErr, initialPhoto string, w http.ResponseWriter) {
 func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w http.ResponseWriter) {
 	user, err := proto.Marshal(u)
 	if err != nil {
