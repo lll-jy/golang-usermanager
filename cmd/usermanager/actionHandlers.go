@@ -159,7 +159,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	if info.User.Password != "" {
 		info.TempUser.Nickname = r.FormValue("nickname")
 		photo := interface{}(info.TempUser.PhotoUrl)
-		if info.TempUser.PhotoUrl == paths.PlaceholderPath || info.TempUser.PhotoUrl == "" {
+		if info.Photo == paths.PlaceholderPath || info.Photo == "" {
 			photo = nil
 		}
 		nickname := interface{}(info.TempUser.Nickname)
