@@ -198,6 +198,19 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// discard handler
+func discardHandler(w http.ResponseWriter, r *http.Request) {
+	info := getPageInfo(r)
+	if info.User.Password != "" {
+		os.Remove(info.Photo)
+		decryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
+		info.TempUser.PhotoUrl = info.User.PhotoUrl
+		http.Redirect(w, r, "/view", 302)
+	} else {
+		http.Redirect(w, r, "/", 302)
+	}
+}
+
 // delete handler
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {

@@ -34,6 +34,7 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/reset", resetHandler).Methods("POST")
 	router.HandleFunc("/delete", deleteHandler).Methods("POST")
 	router.HandleFunc("/upload", uploadHandler).Methods("POST")
+	router.HandleFunc("/discard", discardHandler).Methods("POST")
 }
 
 func tryConnection(db *sql.DB) {
@@ -51,46 +52,6 @@ func tryConnection(db *sql.DB) {
 		} else {
 			break
 		}
-	}
-}
-
-func dummySelect(db *sql.DB) {
-	rows, err := db.Query("SELECT * FROM users")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	columns, err := rows.Columns()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	values := make([]sql.RawBytes, len(columns))
-
-	scanArgs := make([]interface{}, len(values))
-	for i := range values {
-		scanArgs[i] = &values[i]
-	}
-
-	for rows.Next() {
-		err = rows.Scan(scanArgs...)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		var value string
-		for i, col := range values {
-			if col == nil {
-				value = "NULL"
-			} else {
-				value = string(col)
-			}
-			log.Println(columns[i], ": ", value)
-		}
-		log.Println("--------")
-	}
-	if err = rows.Err(); err != nil {
-		panic(err.Error())
 	}
 }
 
@@ -118,13 +79,7 @@ func main() {
 	setDb()
 	defer db.Close()
 	// initialize(db)
-	// dummySelect(db)
 
-	/*rows, err := db.Query("SELECT * FROM users")
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(rows)*/
 	setHandleFunc(router)
 
 	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
@@ -135,27 +90,3 @@ func main() {
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
 }
-
-/*func readline() string {
-	bio := bufio.NewReader(os.Stdin)
-	line, _, err := bio.ReadLine()
-	if err != nil {
-		fmt.Println(err)
-	}
-	return string(line)
-}
-
-func main() {
-	key := "testtesttest"
-	for {
-		fmt.Print("What action? ")
-		line := readline()
-		switch line {
-		case "exit":
-			os.Exit(0)
-		case "encrypt":
-
-		}
-	}
-}
-*/
