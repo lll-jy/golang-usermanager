@@ -13,7 +13,7 @@ RUN go get -d -v ./...
 
 RUN go install -v ./...
 
-RUN go build -o usermanager cmd/*.go
+RUN go build -o usermanager cmd/usermanager/*.go
 
 ENV PORT 8080
 
