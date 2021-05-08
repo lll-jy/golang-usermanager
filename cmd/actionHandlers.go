@@ -96,7 +96,23 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				}
 				u.Name = name
 				u.Password = string(hashed)
-				decryptPhoto(u.PhotoUrl, name, pass, &info.Photo)
+				if info.Photo != "" && info.Photo != "assets/placeholder.jpeg" {
+					fmt.Println("here,", pass, u.PhotoUrl, info.Photo)
+					os.Remove(u.PhotoUrl)
+					if err != nil {
+						log.Printf("The original file path is invalid.")
+					}
+					fileBytes, err := ioutil.ReadFile(info.Photo)
+					if err != nil {
+						log.Printf("The temporary file cannot be read properly.")
+					}
+					err = ioutil.WriteFile(u.PhotoUrl, encrypt(fileBytes, pass), 0600)
+					if err != nil {
+						log.Printf("The file cannot be re-encrypted.")
+					}
+					log.Printf("The original file key is updated.")
+				}
+				decryptPhoto(u.PhotoUrl, pass, name, &info.Photo)
 				tu.Nickname = u.Nickname
 				redirectTarget = tgt
 			} else {
@@ -143,7 +159,6 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		if info.TempUser.Nickname == "" {
 			nickname = nil
 		}
-		fmt.Printf("photo: %v, nickname: %v\n", photo, nickname)
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
 		if info.User.PhotoUrl != "" && info.User.PhotoUrl != "assets/placeholder.jpeg" {
