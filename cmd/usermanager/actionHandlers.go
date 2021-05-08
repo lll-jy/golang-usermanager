@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+	//"./protocol"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -78,11 +80,11 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	u := info.User
 	tu := createUser(name, pass)
 	ie := InfoErr{}
-	if isValidUsername(name) {
+	if protocol.IsValidUsername(name) {
 		if isExistingUsername(name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
-		} else if isValidPassword(pass) {
+		} else if protocol.IsValidPassword(pass) {
 			if pass == repeatPass {
 				if rt == "/signup" {
 					log.Printf("New user %s signed up.", name)
