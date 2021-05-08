@@ -23,7 +23,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User %s found.", name)
 		if isCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
-			u.Password = "correct"
+			u.Password = pass //"correct"
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
@@ -70,7 +70,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				}
 				executeQuery(db, query, name, hashed, u.Name)
 				u.Name = name
-				u.Password = "correct"
+				u.Password = pass //"correct"
 				redirectTarget = tgt
 			} else {
 				log.Printf("User signup failure: password does not match.")
@@ -81,7 +81,6 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		} else {
 			log.Printf("User signup failure: password format invalid.")
 			u.Name = name
-			u.Password = ""
 			ie.PasswordErr = "The password is not valid."
 		}
 	} else {
