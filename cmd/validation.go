@@ -43,7 +43,7 @@ func isExistingUsername(username string, user *protocol.User) bool {
 	user.Nickname = convertToString(nn)
 	if user.Password != "" {
 		if user.PhotoUrl == "" {
-			user.PhotoUrl = "assets/placeholder.jpeg" // EXTEND: maybe some cloud space
+			user.PhotoUrl = placeholderPath // EXTEND: maybe some cloud space
 		}
 		return true
 	} else {
