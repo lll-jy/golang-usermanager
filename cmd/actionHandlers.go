@@ -24,10 +24,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User %s found.", name)
 		if isCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
-			u.Password = pass //"correct"
+			// u.Password = pass //"correct"
 			u.Name = name
 			// TODO: DECRYPT
 			tu = u
+			tu.Password = pass
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
@@ -187,10 +188,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("Error reading file.")
 			}
-			tempFile.Write(fileBytes)
+			tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
 			dirs := strings.Split(tempFile.Name(), "/")
 			info.TempUser.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
 			// TODO: ENCRYPT
+			// client := encryption.NewClient()
+			// encrypt(file, info.TempUser.Password, &info, client)
+			// decrypt(info.TempUser.PhotoUrl, info.TempUser.Password, &info, client)
 			setSession(info.User, info.TempUser, info.InfoErr, w)
 			log.Println("Successfully uploaded file")
 		}
