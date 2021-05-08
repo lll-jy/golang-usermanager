@@ -14,6 +14,7 @@ The app is a simple web application with the web app server connected to a datab
 1. A database query checking authentification is first sent to the database to ask whether the user has the right to perform the desired action, which is in essence user login check. The database used is MySQL and github.com/go-sql-driver/mysql is used to integrate with GoLang.
 1. Successful login would allow the server to enter a session. The session is handled using github.com/gorilla/mux and github.com/gorilla/securecookie.
 1. The server continue to handle the database query made based on the requests and data is fetched from the database (to be elaborated separately below). Database queries are made based on the requests and data is fetched from the database (to be elaborated separately below). 
+    * In particular, the photo is fetched by the photo URL stored in the database, which is encrypted using the password of the user. When a user logs in, a temporary photo file is created after decryption to the local device and accessed by the web application server.
 1. The connection socket generates corresponding HTTP responses based on the results from database and send to the client socket.
 1. The client socket read the response from connection socket and report to the user.
 1. Repeat 3 to 8 to handle more requests from the user.
