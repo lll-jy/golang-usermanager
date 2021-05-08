@@ -18,24 +18,29 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	redirectTarget := "/"
 	u := createUser("", "")
+	tu := createUser(name, pass)
 	ie := InfoErr{}
 	if isExistingUsername(name, &u) {
 		log.Printf("User %s found.", name)
 		if isCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
 			u.Password = pass //"correct"
+			u.Name = name
+			// TODO: DECRYPT
+			tu = u
 			redirectTarget = "/view"
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
+			tu.Password = ""
 			ie.PasswordErr = "Incorrect password."
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
-		u.Password = pass
 		redirectTarget = "/signup"
 	}
-	u.Name = name
-	setSession(&u, ie, "", w)
+	// u.Name = name
+	// setSession(&u, ie, "", w)
+	setSession(&u, &tu, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -44,6 +49,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	clearSession(w)
 	log.Printf("User %s logged out.", getPageInfo(r).User.Name)
+	// TODO: clar
 	http.Redirect(w, r, "/", 302)
 }
 
@@ -54,12 +60,15 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
 	redirectTarget := rt
-	u := createUser(getPageInfo(r).User.Name, pass)
+	// u := createUser(getPageInfo(r).User.Name, pass)
+	info := getPageInfo(r)
+	u := info.User
+	tu := createUser(name, pass)
 	ie := InfoErr{}
 	if isValidUsername(name) {
-		if isExistingUsername(name, &u) {
+		if isExistingUsername(name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
-			u = createUser(name, pass)
+			// u = createUser(name, pass)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if isValidPassword(pass) {
 			if pass == repeatPass {
@@ -68,14 +77,30 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				if err != nil {
 					log.Printf("Error: password %s cannot be hashed.", pass)
 				}
-				executeQuery(db, query, name, hashed, u.Name)
+				executeQuery(db, query, name, hashed, tu.Name)
+				//u.Name = name
+				//u.Password = tu.Password //"correct"
+				if rt == "/reset" {
+					u.Name = ""
+					isExistingUsername(name, u)
+				}
+				// fmt.Println(isExistingUsername(name, u))
+				// fmt.Println(u)
+				// fmt.Println(&tu)
 				u.Name = name
-				u.Password = pass //"correct"
+				u.Password = string(hashed)
+				if u.PhotoUrl == "" {
+					tu.PhotoUrl = "assets/placeholder.jpeg"
+				} else {
+					tu.PhotoUrl = u.PhotoUrl
+				}
+				tu.Nickname = u.Nickname
+				// TODO: ENCRYPT
 				redirectTarget = tgt
 			} else {
 				log.Printf("User signup failure: password does not match.")
-				u.Name = name
-				u.Password = pass
+				// u.Name = name
+				// u.Password = pass
 				ie.PasswordRepeatErr = "The password does not match."
 			}
 		} else {
@@ -87,7 +112,8 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 		log.Printf("User signup failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid."
 	}
-	setSession(&u, ie, "", w)
+	// setSession(&u, ie, "", w)
+	setSession(u, &tu, ie, w)
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
@@ -109,27 +135,29 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 func editHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		info.User.Nickname = r.FormValue("nickname")
-		photo := interface{}(info.User.PhotoUrl)
-		if info.User.PhotoUrl == "assets/placeholder.jpeg" || info.User.PhotoUrl == "" {
+		info.TempUser.Nickname = r.FormValue("nickname")
+		photo := interface{}(info.TempUser.PhotoUrl)
+		if info.TempUser.PhotoUrl == "assets/placeholder.jpeg" || info.TempUser.PhotoUrl == "" {
 			photo = nil
 		}
-		nickname := interface{}(info.User.Nickname)
-		if info.User.Nickname == "" {
+		nickname := interface{}(info.TempUser.Nickname)
+		if info.TempUser.Nickname == "" {
 			nickname = nil
 		}
+		fmt.Printf("photo: %v, nickname: %v\n", photo, nickname)
 		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
-		log.Printf("Initial photo at %s", info.InitialPhoto)
-		if info.InitialPhoto != "" && info.InitialPhoto != "assets/placeholder.jpeg" {
-			err := os.Remove(info.InitialPhoto)
+		if info.User.PhotoUrl != "" && info.User.PhotoUrl != "assets/placeholder.jpeg" && info.TempUser.PhotoUrl != info.User.PhotoUrl { // TODO
+			err := os.Remove(info.User.PhotoUrl)
 			if err == nil {
 				log.Printf("Removed original photo from database.")
 			} else {
 				log.Printf(err.Error())
 			}
 		}
-		setSession(info.User, info.InfoErr, "", w)
+		info.User.PhotoUrl = convertToString(photo)
+		info.User.Nickname = info.TempUser.Nickname
+		setSession(info.User, info.TempUser, info.InfoErr, w)
 		http.Redirect(w, r, "/view", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
@@ -139,7 +167,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
-	initial := info.User.PhotoUrl
+	// initial := info.User.PhotoUrl
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
@@ -161,8 +189,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			tempFile.Write(fileBytes)
 			dirs := strings.Split(tempFile.Name(), "/")
-			info.User.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
-			setSession(info.User, info.InfoErr, initial, w)
+			info.TempUser.PhotoUrl = fmt.Sprintf("test/data/upload/%s", dirs[len(dirs)-1]) // EXTEND: same as above
+			// TODO: ENCRYPT
+			setSession(info.User, info.TempUser, info.InfoErr, w)
 			log.Println("Successfully uploaded file")
 		}
 		http.Redirect(w, r, "/edit", 302)

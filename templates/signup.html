@@ -1,11 +1,11 @@
 <h1>{{printf "%s" .Title}}</h1>
 <form method="POST" action={{.Action}}>
     <label for="name">Username</label>
-    <input type="text" id="name" name="name" value={{.User.Name}}>
+    <input type="text" id="name" name="name" value={{.TempUser.Name}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
     <br><br>
     <label for="password">Password</label>
-    <input type="password" id="password" name="password" value={{.User.Password}}>
+    <input type="password" id="password" name="password" value={{.TempUser.Password}}>
     <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.PasswordErr}}</err>
     <br><br>
     <label for="password_repeat">Password</label>

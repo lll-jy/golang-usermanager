@@ -96,7 +96,7 @@ func dummySelect(db *sql.DB) {
 
 func setDb() {
 	var err error
-	db, err = sql.Open("mysql", "root:@/mysql")
+	db, err = sql.Open("mysql", "root:@/entryTask")
 	if err != nil {
 		log.Printf("Error connecting to database. %s", err.Error())
 	}
@@ -117,6 +117,7 @@ func executeQuery(db *sql.DB, query string, args ...interface{}) {
 func main() {
 	setDb()
 	defer db.Close()
+	// initialize(db)
 	// dummySelect(db)
 
 	/*rows, err := db.Query("SELECT * FROM users")
@@ -134,3 +135,27 @@ func main() {
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
 }
+
+/*func readline() string {
+	bio := bufio.NewReader(os.Stdin)
+	line, _, err := bio.ReadLine()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return string(line)
+}
+
+func main() {
+	key := "testtesttest"
+	for {
+		fmt.Print("What action? ")
+		line := readline()
+		switch line {
+		case "exit":
+			os.Exit(0)
+		case "encrypt":
+
+		}
+	}
+}
+*/

@@ -2,7 +2,7 @@
 <hr>
 <p><b>User: </b>{{printf "%s" .User.Name}}</p>
 <p><b>Photo: </b></p>
-<img src={{.User.PhotoUrl}} alt="profile photo" width="300px">
+<img src={{.TempUser.PhotoUrl}} alt="profile photo" width="300px">
 <form method="GET" action="/edit">
     <button type="submit">Edit</button>
 </form>

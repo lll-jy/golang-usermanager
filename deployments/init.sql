@@ -1,2 +1,2 @@
-CREATE DATABASE IF NOT EXISTS mysql;
-USE mysql;
+CREATE DATABASE IF NOT EXISTS entryTask;
+USE entryTask;

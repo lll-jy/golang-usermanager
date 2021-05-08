@@ -36,7 +36,6 @@ func isExistingUsername(username string, user *protocol.User) bool {
 		return false
 	}
 	defer query.Close()
-	user.Password = ""
 	var p, pu, nn interface{}
 	query.QueryRow(username, user.Name).Scan(&p, &pu, &nn)
 	user.Password = convertToString(p)
