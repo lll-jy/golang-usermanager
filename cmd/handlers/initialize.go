@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func initialize(db *sql.DB) {
+func Initialize(db *sql.DB) {
 	executeQuery(db, "DROP TABLE IF EXISTS users")
 	/*executeQuery(db, `CREATE TABLE users (
 		username    VARCHAR(20) PRIMARY KEY,
@@ -22,7 +22,7 @@ func initialize(db *sql.DB) {
 		photo       VARCHAR(50),
 		nickname    VARCHAR(30) COLLATE utf8mb4_unicode_ci
 	)`)
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 200; i++ {
 		pass, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
 		if err != nil {
 			log.Printf("Error: password %s cannot be hashed.", pass)

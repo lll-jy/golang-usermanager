@@ -11,6 +11,7 @@ import (
 
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+	"google.golang.org/protobuf/proto"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -51,16 +52,22 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			tu.PhotoUrl = u.PhotoUrl
 			tu.Nickname = u.Nickname
 			redirectTarget = "/view"
-			header.Set("user", name)
+			user, err := proto.Marshal(&u)
+			if err != nil {
+				log.Printf("Error: wrong format! %v cannot be parsed as a user.", &u)
+			}
+			header.Set("user", string(user))
 			header.Set("status", "successful login")
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
 			tu.Password = ""
 			ie.PasswordErr = "Incorrect password."
+			header.Set("status", "incorrect password")
 		}
 	} else {
 		log.Printf("User %s does not exists. Redirect to sign up page.", name)
 		redirectTarget = "/signup"
+		header.Set("status", "user not exist")
 	}
 	setSession(&u, &tu, ie, photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
