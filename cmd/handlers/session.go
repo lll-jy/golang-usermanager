@@ -31,7 +31,7 @@ type InfoErr struct {
 
 type PageInfo struct {
 	User         *protocol.User
-	TempUser     *protocol.User // CHANGE
+	TempUser     *protocol.User
 	InfoErr      InfoErr
 	DisplayName  string
 	Action       string
@@ -42,7 +42,7 @@ type PageInfo struct {
 
 func getPageInfo(r *http.Request) (info PageInfo) {
 	var user string
-	var tempUser string // CHANGE
+	var tempUser string
 	var nameErr string
 	var passErr string
 	var repeatPassErr string
@@ -79,7 +79,7 @@ func getPageInfo(r *http.Request) (info PageInfo) {
 	}
 }
 
-func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w http.ResponseWriter) {
+func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo string) string {
 	user, err := proto.Marshal(u)
 	if err != nil {
 		log.Printf("Error: wrong format! %s cannot be parsed as a user.", u)
@@ -97,13 +97,20 @@ func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w
 		"photo":         photo,
 	}
 	if encoded, err := cookieHandler.Encode("session", value); err == nil {
-		cookie := &http.Cookie{
-			Name:  "session",
-			Value: encoded,
-			Path:  "/",
-		}
-		http.SetCookie(w, cookie)
+		return encoded
+	} else {
+		log.Printf("Session cannot be parsed and encoded.")
+		return ""
 	}
+}
+
+func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: SetSessionInfo(u, tu, ie, photo),
+		Path:  "/",
+	}
+	http.SetCookie(w, cookie)
 }
 
 func clearSession(w http.ResponseWriter) {
