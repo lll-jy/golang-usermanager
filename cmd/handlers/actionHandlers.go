@@ -219,10 +219,9 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
-		fmt.Printf("here!! %v\n", r.FormValue("photo_file"))
 		if err != nil {
 			log.Println("Error retrieving file.")
-			header.Set("status", "cannot retrieve")
+			header.Set("status", fmt.Sprintf("cannot retrieve: %s ||\n %v", err, r.Body))
 		} else {
 			defer file.Close()
 			log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
