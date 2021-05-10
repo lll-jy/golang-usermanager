@@ -227,6 +227,10 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	}
 }
 
+func test_upload(t *testing.T, db *sql.DB, i int) {
+	
+}
+
 func clearEffects(db *sql.DB) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
 	for i := 0; i < 5; i++ {
@@ -291,7 +295,7 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Upload", func(t *testing.T) {
-		
+
 	})
 }
 
