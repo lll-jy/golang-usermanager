@@ -44,7 +44,7 @@ func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	user.Nickname = ConvertToString(nn)
 	if user.Password != "" {
 		if user.PhotoUrl == "" {
-			user.PhotoUrl = paths.PlaceholderPath // EXTEND: maybe some cloud space
+			user.PhotoUrl = paths.PlaceholderPath
 		}
 		return true
 	} else {

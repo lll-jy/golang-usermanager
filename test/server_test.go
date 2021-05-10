@@ -42,19 +42,20 @@ func getUser(h http.Header) *protocol.User {
 	return user
 }
 
-func form_setup(body string, t *testing.T, db *sql.DB, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) *httptest.ResponseRecorder {
+func form_setup(body string, t *testing.T, db *sql.DB, url string) (*httptest.ResponseRecorder, *http.Request) {
 	response := httptest.NewRecorder()
 	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		t.Errorf("Request error %s.", err)
 	}
-	http.HandlerFunc(makeHandler(db, fn)).ServeHTTP(response, request)
-	return response
+	return response, request
 }
 
 func login_setup(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
-	return form_setup(body, t, db, "/login", handlers.LoginHandler)
+	response, request := form_setup(body, t, db, "/login")
+	http.HandlerFunc(makeHandler(db, handlers.LoginHandler)).ServeHTTP(response, request)
+	return response
 }
 
 func test_single_user_login(t *testing.T, i int, db *sql.DB) {
@@ -83,7 +84,7 @@ func updateCookie(cookieString string, response *httptest.ResponseRecorder, requ
 		Path:  "/",
 	}
 	http.SetCookie(response, cookie)
-	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	request.Header["Cookie"] = response.HeaderMap["Set-Cookie"]
 }
 
 func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
@@ -141,7 +142,8 @@ func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn
 
 func test_valid_signup(t *testing.T, db *sql.DB, i int) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
-	response := form_setup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup", handlers.SignupHandler)
+	response, request := form_setup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup")
+	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	user := getUser(header)
 	if user.Name != fmt.Sprintf("testuser%d", i) || header["Status"][0] != "successful signup" {
@@ -150,7 +152,11 @@ func test_valid_signup(t *testing.T, db *sql.DB, i int) {
 }
 
 func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, repeat string, status string, errString string) {
-	response := form_setup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup", handlers.SignupHandler)
+	response, request := form_setup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup")
+	t.Log("here here")
+	t.Log(request.FormValue("name"))
+	t.Log(request.ParseForm())
+	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	if header["Status"][0] != status {
 		t.Errorf(errString)
@@ -190,6 +196,44 @@ func test_valid_delete(t *testing.T, db *sql.DB, i int) {
 	}
 }
 
+func test_valid_edit(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("user%d", i)
+	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
+	user := &protocol.User{}
+	nickname := fmt.Sprintf("nick%d", i)
+	nicknew := fmt.Sprintf("mick%d", i)
+	response, request := form_setup(fmt.Sprintf("nickname=%s", nicknew), t, db, "/edit")
+	cookieString := handlers.SetSessionInfo(
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+			Nickname: nickname,
+		},
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+			Nickname: nickname,
+		},
+		handlers.InfoErr{},
+		"assets/placeholder.jpeg",
+	)
+	updateCookie(cookieString, response, request)
+	http.HandlerFunc(makeHandler(db, handlers.EditHandler)).ServeHTTP(response, request)
+	flag := protocol.IsExistingUsername(db, name, user)
+	if !flag {
+		t.Errorf("Wrongly deleted/updated primary key of %s.", name)
+	} else if user.Nickname != nicknew {
+		t.Errorf("Update of %s failed.", name)
+	}
+}
+
+func clearEffects(db *sql.DB) {
+	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
+	for i := 0; i < 5; i++ {
+		handlers.ExecuteQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
+	}
+}
+
 func Test_handlers(t *testing.T) {
 	db := setupDb(t)
 
@@ -205,6 +249,7 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Login", func(t *testing.T) {
+		clearEffects(db)
 		for i := 0; i < 5; i++ {
 			test_single_user_login(t, i, db)
 		}
@@ -217,6 +262,7 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Signup", func(t *testing.T) {
+		clearEffects(db)
 		for i := 0; i < 5; i++ {
 			test_valid_signup(t, db, i)
 		}
@@ -234,6 +280,13 @@ func Test_handlers(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			test_valid_delete(t, db, i)
+		}
+	})
+
+	t.Run("Edit", func(t *testing.T) {
+		clearEffects(db)
+		for i := 0; i < 5; i++ {
+			test_valid_edit(t, db, i)
 		}
 	})
 }
