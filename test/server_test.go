@@ -72,12 +72,82 @@ func test_invalid_user_login(t *testing.T, info string, db *sql.DB, expectedErr 
 	}
 }
 
+func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
+	response := httptest.NewRecorder()
+	request := makeRequest(http.MethodGet, url, t)
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: cookieString,
+		Path:  "/",
+	}
+	http.SetCookie(response, cookie)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	http.HandlerFunc(makeHandler(db, fn)).ServeHTTP(response, request)
+	header := response.Header()
+	return header
+}
+
+func test_restricted_template_granted_access(t *testing.T, db *sql.DB, i int, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
+	/*response := httptest.NewRecorder()
+	request, err := http.NewRequest(http.MethodPost, "/login", strings.NewReader(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2)))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if err != nil {
+		t.Errorf("Request error %s.", err)
+	}
+	http.HandlerFunc(makeHandler(db, handlers.LoginHandler)).ServeHTTP(response, request)
+	header := response.Header()
+	user := getUser(header)
+	if user.Name != fmt.Sprintf("user%d", i) || header["Status"][0] != "successful login" {
+		t.Errorf("Login to user%d unsuccessful.", i)
+	} else if user.Nickname != fmt.Sprintf("nick%d", i) {
+		t.Errorf("Wrong information retrieved.")
+	}*/
+
+	cookieString := handlers.SetSessionInfo(
+		&protocol.User{
+			Name:     fmt.Sprintf("user%d", i),
+			Password: fmt.Sprintf("pass%d%d", i*2, i*2),
+		},
+		&protocol.User{},
+		handlers.InfoErr{},
+		"",
+	)
+	header := test_restricted_template_resulting_header(t, db, cookieString, url, fn)
+	if header["Status"][0] != "successful view" {
+		t.Errorf("Failed access to restricted page for user%d", i)
+	}
+}
+
+func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
+	cookieString := handlers.SetSessionInfo(
+		&protocol.User{},
+		&protocol.User{},
+		handlers.InfoErr{},
+		"",
+	)
+	header := test_restricted_template_resulting_header(t, db, cookieString, url, fn)
+	if header["Status"][0] != "login error" {
+		t.Errorf("Wrongly granted access.")
+	}
+}
+
 func test_single_user(t *testing.T, i int, db *sql.DB) {
 	test_single_user_login(t, i, db)
 }
 
 func Test_handlers(t *testing.T) {
 	db := setupDb(t)
+
+	t.Run("Restricted access", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			test_restricted_template_granted_access(t, db, i, "/view", handlers.ViewPageHandler)
+			test_restricted_template_granted_access(t, db, i, "/reset", handlers.ResetPageHandler)
+			test_restricted_template_granted_access(t, db, i, "/edit", handlers.EditPageHandler)
+		}
+		test_restricted_template_no_access(t, db, "/view", handlers.ViewPageHandler)
+		test_restricted_template_no_access(t, db, "/reset", handlers.ResetPageHandler)
+		test_restricted_template_no_access(t, db, "/edit", handlers.EditPageHandler)
+	})
 
 	t.Run("Login", func(t *testing.T) {
 		for i := 0; i < 5; i++ {

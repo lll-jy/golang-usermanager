@@ -30,11 +30,15 @@ func renderTemplate(w http.ResponseWriter, tmpl string, info *PageInfo) {
 
 func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl string, fn func(*PageInfo)) {
 	info := GetPageInfo(r)
+	header := w.Header()
+
 	if info.User.Password != "" {
 		fn(&info)
 		renderTemplate(w, tmpl, &info)
+		header.Set("status", "successful view")
 	} else {
 		http.Redirect(w, r, "/", 302)
+		header.Set("status", "login error")
 	}
 }
 
