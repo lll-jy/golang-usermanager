@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-var TemplateFileNameFormat = "../templates/%s.html"
+var TemplateFileNameFormat = "templates/%s.html"
 var IndexTemplate = fmt.Sprintf(TemplateFileNameFormat, "index")
 var ViewTemplate = fmt.Sprintf(TemplateFileNameFormat, "view")
 var SignUpTemplate = fmt.Sprintf(TemplateFileNameFormat, "signup")

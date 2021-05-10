@@ -1,10 +1,15 @@
 package test
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -42,7 +47,7 @@ func getUser(h http.Header) *protocol.User {
 	return user
 }
 
-func form_setup(body string, t *testing.T, db *sql.DB, url string) (*httptest.ResponseRecorder, *http.Request) {
+func formSetup(body string, t *testing.T, db *sql.DB, url string) (*httptest.ResponseRecorder, *http.Request) {
 	response := httptest.NewRecorder()
 	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -53,7 +58,7 @@ func form_setup(body string, t *testing.T, db *sql.DB, url string) (*httptest.Re
 }
 
 func login_setup(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
-	response, request := form_setup(body, t, db, "/login")
+	response, request := formSetup(body, t, db, "/login")
 	http.HandlerFunc(makeHandler(db, handlers.LoginHandler)).ServeHTTP(response, request)
 	return response
 }
@@ -142,7 +147,7 @@ func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn
 
 func test_valid_signup(t *testing.T, db *sql.DB, i int) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
-	response, request := form_setup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup")
+	response, request := formSetup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup")
 	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	user := getUser(header)
@@ -152,10 +157,7 @@ func test_valid_signup(t *testing.T, db *sql.DB, i int) {
 }
 
 func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, repeat string, status string, errString string) {
-	response, request := form_setup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup")
-	t.Log("here here")
-	t.Log(request.FormValue("name"))
-	t.Log(request.ParseForm())
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup")
 	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	if header["Status"][0] != status {
@@ -199,10 +201,9 @@ func test_valid_delete(t *testing.T, db *sql.DB, i int) {
 func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
-	user := &protocol.User{}
 	nickname := fmt.Sprintf("nick%d", i)
 	nicknew := fmt.Sprintf("mick%d", i)
-	response, request := form_setup(fmt.Sprintf("nickname=%s", nicknew), t, db, "/edit")
+	response, request := formSetup(fmt.Sprintf("nickname=%s", nicknew), t, db, "/edit")
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{
 			Name:     name,
@@ -219,6 +220,7 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	)
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.EditHandler)).ServeHTTP(response, request)
+	user := &protocol.User{}
 	flag := protocol.IsExistingUsername(db, name, user)
 	if !flag {
 		t.Errorf("Wrongly deleted/updated primary key of %s.", name)
@@ -227,8 +229,91 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	}
 }
 
+// https://github.com/gobuffalo/httptest/blob/master/file.go
 func test_upload(t *testing.T, db *sql.DB, i int) {
-	
+	filename := fmt.Sprintf("data/original/sample%d.jpeg", i%3+1)
+	fieldname := "photo_file"
+	bb := &bytes.Buffer{}
+	writer := multipart.NewWriter(bb)
+	defer writer.Close()
+	part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
+	if err != nil {
+		t.Errorf("The file cannot be created as form file.")
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		t.Errorf("File %s not found.", filename)
+	}
+	io.Copy(part, file)
+	/*content, err := os.ReadFile(filename)
+	if err != nil {
+		t.Errorf("The file is invalid.")
+	}
+	_, err = io.Copy(part, bytes.NewReader(content))
+	if err != nil {
+		t.Errorf("The file cannot be copied.")
+	}
+	err = writer.WriteField(fieldname, filename)
+	if err != nil {
+		t.Errorf("Cannot read file.")
+	}*/
+	// https://stackoverflow.com/questions/20205796/post-data-using-the-content-type-multipart-form-data
+	/*file, err := os.Open(filename)
+	if err != nil {
+		t.Errorf("File %s cannot be found.", filename)
+	}
+	values := map[string]io.Reader{
+		fieldname: file,
+	}
+	for k, r := range values {
+		var fw io.Writer
+		if x, ok := r.(io.Closer); ok {
+			defer x.Close()
+		}
+		if x, ok := r.(*os.File); ok {
+			if fw, err = writer.CreateFormFile(k, x.Name()); err != nil {
+				t.Errorf("Cannot create form file.")
+			}
+		} else {
+			if fw, err = writer.CreateFormField(k); err != nil {
+				t.Errorf("Cannot create field.")
+			}
+		}
+		if _, err = io.Copy(fw, r); err != nil {
+			t.Errorf("Cannot copy file writer")
+		}
+	}*/
+	request, err := http.NewRequest(http.MethodPost, "/upload", bb)
+	//f, _, _ := request.FormFile(fieldname)
+	//fb, _ := ioutil.ReadAll(f)
+	//os.WriteFile("test.jpeg", fb, 0600)
+	//t.Errorf("here hrere: %v\n%v", f, bb)
+	if err != nil {
+		t.Errorf("Cannot make request.")
+	} else {
+		request.Header.Set("Content-Type", writer.FormDataContentType())
+	}
+	response := httptest.NewRecorder()
+	name := fmt.Sprintf("user%d", i)
+	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
+	nickname := fmt.Sprintf("nick%d", i)
+	cookieString := handlers.SetSessionInfo(
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+			Nickname: nickname,
+		},
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+			Nickname: nickname,
+		},
+		handlers.InfoErr{},
+		"assets/placeholder.jpeg",
+	)
+	updateCookie(cookieString, response, request)
+	http.HandlerFunc(makeHandler(db, handlers.UploadHandler)).ServeHTTP(response, request)
+	t.Errorf("%s; %s", response.Header()["Photo"][0], response.Header()["Status"][0])
 }
 
 func clearEffects(db *sql.DB) {
@@ -295,7 +380,7 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Upload", func(t *testing.T) {
-
+		test_upload(t, db, 0)
 	})
 }
 

@@ -36,6 +36,7 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/delete", makeHandler(handlers.DeleteHandler)).Methods("POST")
 	router.HandleFunc("/upload", makeHandler(handlers.UploadHandler)).Methods("POST")
 	router.HandleFunc("/discard", makeHandler(handlers.DiscardHandler)).Methods("POST")
+	router.HandleFunc("/remove", makeHandler(handlers.RemoveHandler)).Methods("POST")
 }
 
 func tryConnection(db *sql.DB) {

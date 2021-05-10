@@ -212,12 +212,17 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
 func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	header := w.Header()
 	info := GetPageInfo(r)
+	header.Set("photo", info.Photo)
+	header.Set("status", "")
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
+		fmt.Printf("here!! %v\n", r.FormValue("photo_file"))
 		if err != nil {
 			log.Println("Error retrieving file.")
+			header.Set("status", "cannot retrieve")
 		} else {
 			defer file.Close()
 			log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
@@ -237,6 +242,8 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			decryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
+			header.Set("photo", info.Photo)
+			header.Set("status", "success")
 		}
 		http.Redirect(w, r, "/edit", 302)
 	} else {
