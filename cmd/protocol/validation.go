@@ -1,8 +1,13 @@
 package protocol
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
+
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func IsValidUsername(username string) bool {
@@ -23,4 +28,30 @@ func ConvertToString(i interface{}) string {
 		s = ""
 	}
 	return s
+}
+
+func IsExistingUsername(db *sql.DB, username string, user *User) bool {
+	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
+	if err != nil {
+		log.Printf("Cannot parse query: %s", err.Error())
+		return false
+	}
+	defer query.Close()
+	var p, pu, nn interface{}
+	query.QueryRow(username, user.Name).Scan(&p, &pu, &nn)
+	user.Password = ConvertToString(p)
+	user.PhotoUrl = ConvertToString(pu)
+	user.Nickname = ConvertToString(nn)
+	if user.Password != "" {
+		if user.PhotoUrl == "" {
+			user.PhotoUrl = paths.PlaceholderPath // EXTEND: maybe some cloud space
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsCorrectPassword(userpass string, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userpass)) == nil
 }

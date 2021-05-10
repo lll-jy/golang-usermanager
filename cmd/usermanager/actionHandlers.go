@@ -39,9 +39,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	tu := createUser(name, pass)
 	ie := InfoErr{}
 	photo := ""
-	if isExistingUsername(name, &u) {
+	if protocol.IsExistingUsername(db, name, &u) {
 		log.Printf("User %s found.", name)
-		if isCorrectPassword(pass, u.Password) {
+		if protocol.IsCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
 			u.Name = name
 			decryptPhoto(u.PhotoUrl, pass, name, &photo)
@@ -85,7 +85,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	tu := createUser(name, pass)
 	ie := InfoErr{}
 	if protocol.IsValidUsername(name) {
-		if isExistingUsername(name, u) {
+		if protocol.IsExistingUsername(db, name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
 		} else if protocol.IsValidPassword(pass) {
@@ -100,7 +100,7 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 				executeQuery(db, query, name, hashed, tu.Name)
 				if rt == "/reset" {
 					u.Name = ""
-					isExistingUsername(name, u)
+					protocol.IsExistingUsername(db, name, u)
 				}
 				u.Name = name
 				u.Password = string(hashed)
