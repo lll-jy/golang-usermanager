@@ -88,6 +88,9 @@ func LogoutHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // sign up handler
 
 func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt string, tgt string, query string) {
+	header := w.Header()
+	header.Set("user", "")
+	header.Set("status", "")
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
@@ -100,6 +103,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 		if protocol.IsExistingUsername(db, name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
 			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
+			header.Set("status", "user already exists")
 		} else if protocol.IsValidPassword(pass) {
 			if pass == repeatPass {
 				if rt == "/signup" {
@@ -109,7 +113,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 				if err != nil {
 					log.Printf("Error: password %s cannot be hashed.", pass)
 				}
-				executeQuery(db, query, name, hashed, tu.Name)
+				ExecuteQuery(db, query, name, hashed, tu.Name)
 				if rt == "/reset" {
 					u.Name = ""
 					protocol.IsExistingUsername(db, name, u)
@@ -134,18 +138,27 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 				decryptPhoto(u.PhotoUrl, pass, name, &info.Photo)
 				tu.Nickname = u.Nickname
 				redirectTarget = tgt
+				user, err := proto.Marshal(u)
+				if err != nil {
+					log.Printf("Error: wrong format! %v cannot be parsed as a user.", &u)
+				}
+				header.Set("user", string(user))
+				header.Set("status", "successful signup")
 			} else {
 				log.Printf("User signup/reset failure: password does not match.")
 				ie.PasswordRepeatErr = "The password does not match."
+				header.Set("status", "mismatch password")
 			}
 		} else {
 			log.Printf("User signup/reset failure: password format invalid.")
 			u.Name = name
 			ie.PasswordErr = "The password is not valid."
+			header.Set("status", "wrong password format")
 		}
 	} else {
 		log.Printf("User signup/reset failture: invalid username format of %s.", name)
 		ie.UsernameErr = "The username format is not valid."
+		header.Set("status", "wrong username format")
 	}
 	setSession(u, &tu, ie, info.Photo, w)
 	http.Redirect(w, r, redirectTarget, 302)
@@ -178,7 +191,7 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		if info.TempUser.Nickname == "" {
 			nickname = nil
 		}
-		executeQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
+		ExecuteQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
 		log.Printf("User information of %s updated.", info.User.Name)
 		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 			err := os.Remove(info.User.PhotoUrl)
@@ -260,7 +273,7 @@ func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			os.Remove(info.Photo)
 		}
 		setSession(info.User, info.TempUser, info.InfoErr, paths.PlaceholderPath, w)
-		executeQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
+		ExecuteQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
 		http.Redirect(w, r, "/edit", 302)
 		log.Printf("Removed profile photo for user %s", info.User.Name)
 	} else {
@@ -274,7 +287,7 @@ func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		name := info.User.Name
-		executeQuery(db, "DELETE FROM users WHERE username = ?", name)
+		ExecuteQuery(db, "DELETE FROM users WHERE username = ?", name)
 		log.Printf("User %s deleted.", name)
 		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.Photo)

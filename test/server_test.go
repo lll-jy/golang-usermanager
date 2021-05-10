@@ -42,15 +42,19 @@ func getUser(h http.Header) *protocol.User {
 	return user
 }
 
-func login_setup(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
+func form_setup(body string, t *testing.T, db *sql.DB, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) *httptest.ResponseRecorder {
 	response := httptest.NewRecorder()
-	request, err := http.NewRequest(http.MethodPost, "/login", strings.NewReader(body))
+	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		t.Errorf("Request error %s.", err)
 	}
-	http.HandlerFunc(makeHandler(db, handlers.LoginHandler)).ServeHTTP(response, request)
+	http.HandlerFunc(makeHandler(db, fn)).ServeHTTP(response, request)
 	return response
+}
+
+func login_setup(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
+	return form_setup(body, t, db, "/login", handlers.LoginHandler)
 }
 
 func test_single_user_login(t *testing.T, i int, db *sql.DB) {
@@ -131,8 +135,22 @@ func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn
 	}
 }
 
-func test_single_user(t *testing.T, i int, db *sql.DB) {
-	test_single_user_login(t, i, db)
+func test_valid_signup(t *testing.T, db *sql.DB, i int) {
+	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
+	response := form_setup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup", handlers.SignupHandler)
+	header := response.Header()
+	user := getUser(header)
+	if user.Name != fmt.Sprintf("testuser%d", i) || header["Status"][0] != "successful signup" {
+		t.Errorf("Sign up for testuser%d unssucessful.", i)
+	}
+}
+
+func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, repeat string, status string, errString string) {
+	response := form_setup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup", handlers.SignupHandler)
+	header := response.Header()
+	if header["Status"][0] != status {
+		t.Errorf(errString)
+	}
 }
 
 func Test_handlers(t *testing.T) {
@@ -158,6 +176,21 @@ func Test_handlers(t *testing.T) {
 		}
 		for i := 0; i < 5; i++ {
 			test_invalid_user_login(t, fmt.Sprintf("name=useruser%d&password=pass%d", i, i), db, "user not exist", fmt.Sprintf("Non-existing user useruser%d not detected correctly.", i))
+		}
+	})
+
+	t.Run("Signup", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			test_valid_signup(t, db, i)
+		}
+		for i := 0; i < 5; i++ {
+			test_invalid_signup(t, db, fmt.Sprintf("user%d", i), "pass", "pass", "user already exists", fmt.Sprintf("Failed to recognized existing user user%d", i))
+			name := fmt.Sprintf("testuser%d", 100+i)
+			pass := fmt.Sprintf("pass%d%d", 200+i, 200+i)
+			test_invalid_signup(t, db, name, pass, fmt.Sprintf("pass%d", 200+i), "mismatch password", "Failed to detect password mismatch.")
+			wrong_pass := fmt.Sprintf("p%d", i)
+			test_invalid_signup(t, db, name, wrong_pass, wrong_pass, "wrong password format", "Failed to detect wrong password format.")
+			test_invalid_signup(t, db, fmt.Sprintf("testuser,%d", i), pass, pass, "wrong username format", "Failed to detect wrong username format.")
 		}
 	})
 }

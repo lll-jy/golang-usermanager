@@ -9,14 +9,14 @@ import (
 )
 
 func Initialize(db *sql.DB) {
-	executeQuery(db, "DROP TABLE IF EXISTS users")
+	ExecuteQuery(db, "DROP TABLE IF EXISTS users")
 	/*executeQuery(db, `CREATE TABLE users (
 		username    VARCHAR(20) PRIMARY KEY,
 		password    VARCHAR(20) NOT NULL,
 		photo       VARCHAR(50),
 		nickname    VARCHAR(30) COLLATE Latin1_General_100_CI_AI_SC_UTF8
 	)`)*/
-	executeQuery(db, `CREATE TABLE users (
+	ExecuteQuery(db, `CREATE TABLE users (
 		username    VARCHAR(20) PRIMARY KEY,
 		password    VARCHAR(100) NOT NULL,
 		photo       VARCHAR(50),
@@ -27,7 +27,7 @@ func Initialize(db *sql.DB) {
 		if err != nil {
 			log.Printf("Error: password %s cannot be hashed.", pass)
 		}
-		executeQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
+		ExecuteQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
 			fmt.Sprintf("user%d", i),
 			pass, nil,
 			fmt.Sprintf("nick%d", i),
@@ -35,7 +35,7 @@ func Initialize(db *sql.DB) {
 	}
 }
 
-func executeQuery(db *sql.DB, query string, args ...interface{}) {
+func ExecuteQuery(db *sql.DB, query string, args ...interface{}) {
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
