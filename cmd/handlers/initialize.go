@@ -35,14 +35,15 @@ func Initialize(db *sql.DB) {
 	}
 }
 
-func ExecuteQuery(db *sql.DB, query string, args ...interface{}) {
+func ExecuteQuery(db *sql.DB, query string, args ...interface{}) error {
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
+		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(args...)
 	if err != nil {
-		log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
+		return err
 	}
+	return nil
 }

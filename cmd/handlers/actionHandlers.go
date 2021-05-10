@@ -284,11 +284,20 @@ func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // delete handler
 
 func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	header := w.Header()
+	header.Set("status", "")
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		name := info.User.Name
-		ExecuteQuery(db, "DELETE FROM users WHERE username = ?", name)
-		log.Printf("User %s deleted.", name)
+		query := "DELETE FROM users WHERE username = ?"
+		err := ExecuteQuery(db, query, name)
+		if err != nil {
+			log.Printf("Query %s cannot be executed due to error: %s", query, err.Error())
+			header.Set("status", "cannot delete")
+		} else {
+			log.Printf("User %s deleted.", name)
+			header.Set("status", fmt.Sprintf("delete %s", name))
+		}
 		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.Photo)
 		}

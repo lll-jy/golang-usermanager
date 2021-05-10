@@ -76,9 +76,7 @@ func test_invalid_user_login(t *testing.T, info string, db *sql.DB, expectedErr 
 	}
 }
 
-func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
-	response := httptest.NewRecorder()
-	request := makeRequest(http.MethodGet, url, t)
+func updateCookie(cookieString string, response *httptest.ResponseRecorder, request *http.Request) {
 	cookie := &http.Cookie{
 		Name:  "session",
 		Value: cookieString,
@@ -86,6 +84,12 @@ func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieS
 	}
 	http.SetCookie(response, cookie)
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+}
+
+func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
+	response := httptest.NewRecorder()
+	request := makeRequest(http.MethodGet, url, t)
+	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, fn)).ServeHTTP(response, request)
 	header := response.Header()
 	return header
@@ -153,6 +157,39 @@ func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, rep
 	}
 }
 
+func delete_execute(t *testing.T, db *sql.DB, name string, pass string) http.Header {
+	cookieString := handlers.SetSessionInfo(
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+		},
+		&protocol.User{},
+		handlers.InfoErr{},
+		"",
+	)
+	response := httptest.NewRecorder()
+	request := makeRequest(http.MethodPost, "/delete", t)
+	updateCookie(cookieString, response, request)
+	http.HandlerFunc(makeHandler(db, handlers.DeleteHandler)).ServeHTTP(response, request)
+	return response.Header()
+}
+
+func test_valid_delete(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("testuser%d", i)
+	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
+	handlers.ExecuteQuery(db, "INSERT INTO users VALUES (?, ?, NULL, NULL) ON DUPLICATE KEY UPDATE username = ?", name, pass, name)
+	header := delete_execute(t, db, name, pass)
+	if header["Status"][0] != fmt.Sprintf("delete %s", name) {
+		t.Errorf("Deletion of %s failed.", name)
+	} else {
+		user := &protocol.User{}
+		flag := protocol.IsExistingUsername(db, name, user)
+		if flag {
+			t.Errorf("Deletion not taking expected effect.")
+		}
+	}
+}
+
 func Test_handlers(t *testing.T) {
 	db := setupDb(t)
 
@@ -191,6 +228,12 @@ func Test_handlers(t *testing.T) {
 			wrong_pass := fmt.Sprintf("p%d", i)
 			test_invalid_signup(t, db, name, wrong_pass, wrong_pass, "wrong password format", "Failed to detect wrong password format.")
 			test_invalid_signup(t, db, fmt.Sprintf("testuser,%d", i), pass, pass, "wrong username format", "Failed to detect wrong username format.")
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			test_valid_delete(t, db, i)
 		}
 	})
 }
