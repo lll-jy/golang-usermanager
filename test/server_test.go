@@ -289,6 +289,10 @@ func Test_handlers(t *testing.T) {
 			test_valid_edit(t, db, i)
 		}
 	})
+
+	t.Run("Upload", func(t *testing.T) {
+		
+	})
 }
 
 /*func Test_login(t *testing.T) {
