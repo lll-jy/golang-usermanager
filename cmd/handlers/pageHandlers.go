@@ -29,7 +29,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, info *PageInfo) {
 }
 
 func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl string, fn func(*PageInfo)) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		fn(&info)
 		renderTemplate(w, tmpl, &info)
@@ -41,12 +41,12 @@ func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl strin
 // index page
 
 func IndexPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	renderTemplate(w, "index", &info)
 }
 
 func SignupPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	info.Action = "/signup"
 	info.Title = "Sign up"
 	info.CancelAction = "/"

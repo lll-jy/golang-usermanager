@@ -40,7 +40,7 @@ type PageInfo struct {
 	Photo        string
 }
 
-func getPageInfo(r *http.Request) (info PageInfo) {
+func GetPageInfo(r *http.Request) (info PageInfo) {
 	var user string
 	var tempUser string
 	var nameErr string

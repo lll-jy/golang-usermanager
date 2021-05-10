@@ -32,6 +32,9 @@ func decryptPhoto(url string, pass string, name string, photo *string) {
 }
 
 func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	header := w.Header()
+	header.Set("user", "")
+	header.Set("status", "")
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	redirectTarget := "/"
@@ -48,6 +51,8 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			tu.PhotoUrl = u.PhotoUrl
 			tu.Nickname = u.Nickname
 			redirectTarget = "/view"
+			header.Set("user", name)
+			header.Set("status", "successful login")
 		} else {
 			log.Printf("Login to %s unsuccessful due to wrong password!", name)
 			tu.Password = ""
@@ -64,7 +69,7 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // logout handler
 
 func LogoutHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	clearSession(w)
 	log.Printf("User %s logged out.", info.User.Name)
 	if info.Photo != "" && info.Photo != paths.PlaceholderPath {
@@ -80,7 +85,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
 	redirectTarget := rt
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	u := info.User
 	tu := createUser(name, pass)
 	ie := InfoErr{}
@@ -144,7 +149,7 @@ func SignupHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		userInfoHandler(db, w, r, "/reset", "/view", "UPDATE users SET username = ?, password = ? WHERE username = ?")
 	} else {
@@ -155,7 +160,7 @@ func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // edit handler
 
 func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		info.TempUser.Nickname = r.FormValue("nickname")
 		photo := interface{}(info.TempUser.PhotoUrl)
@@ -187,7 +192,7 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
 func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
@@ -222,7 +227,7 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // discard handler
 
 func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 			os.Remove(info.Photo)
@@ -242,7 +247,7 @@ func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // remove handler
 
 func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
 			os.Remove(info.Photo)
@@ -259,7 +264,7 @@ func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 // delete handler
 
 func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := getPageInfo(r)
+	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		name := info.User.Name
 		executeQuery(db, "DELETE FROM users WHERE username = ?", name)
