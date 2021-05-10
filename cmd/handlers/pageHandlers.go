@@ -1,6 +1,7 @@
-package main
+package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -33,12 +34,12 @@ func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl strin
 
 // index page
 
-func indexPageHandler(w http.ResponseWriter, r *http.Request) {
+func IndexPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	renderTemplate(w, "index", &info)
 }
 
-func signupPageHandler(w http.ResponseWriter, r *http.Request) {
+func SignupPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	info.Action = "/signup"
 	info.Title = "Sign up"
@@ -56,19 +57,19 @@ func setDisplayName(info *PageInfo) {
 	}
 }
 
-func viewPageHandler(w http.ResponseWriter, r *http.Request) {
+func ViewPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderRestrictedTemplate(w, r, "view", setDisplayName)
 }
 
 // edit page
 
-func editPageHandler(w http.ResponseWriter, r *http.Request) {
+func EditPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderRestrictedTemplate(w, r, "profile", func(info *PageInfo) {})
 }
 
 // reset page
 
-func resetPageHandler(w http.ResponseWriter, r *http.Request) {
+func ResetPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderRestrictedTemplate(w, r, "signup", func(info *PageInfo) {
 		info.Action = "/reset"
 		info.Title = "Reset"

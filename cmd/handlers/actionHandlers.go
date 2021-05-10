@@ -1,6 +1,7 @@
-package main
+package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 
-	//"./protocol"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,7 +31,7 @@ func decryptPhoto(url string, pass string, name string, photo *string) {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	redirectTarget := "/"
@@ -63,7 +63,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // logout handler
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
+func LogoutHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	clearSession(w)
 	log.Printf("User %s logged out.", info.User.Name)
@@ -75,7 +75,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // sign up handler
 
-func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt string, query string) {
+func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt string, tgt string, query string) {
 	name := r.FormValue("name")
 	pass := r.FormValue("password")
 	repeatPass := r.FormValue("password_repeat")
@@ -139,14 +139,14 @@ func userInfoHandler(w http.ResponseWriter, r *http.Request, rt string, tgt stri
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
-func signupHandler(w http.ResponseWriter, r *http.Request) {
-	userInfoHandler(w, r, "/signup", "/edit", "INSERT INTO users VALUES (?, ?, NULL, NULL) ON DUPLICATE KEY UPDATE username = ?")
+func SignupHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	userInfoHandler(db, w, r, "/signup", "/edit", "INSERT INTO users VALUES (?, ?, NULL, NULL) ON DUPLICATE KEY UPDATE username = ?")
 }
 
-func resetHandler(w http.ResponseWriter, r *http.Request) {
+func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
-		userInfoHandler(w, r, "/reset", "/view", "UPDATE users SET username = ?, password = ? WHERE username = ?")
+		userInfoHandler(db, w, r, "/reset", "/view", "UPDATE users SET username = ?, password = ? WHERE username = ?")
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}
@@ -154,7 +154,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 
 // edit handler
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
 		info.TempUser.Nickname = r.FormValue("nickname")
@@ -186,7 +186,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // https://tutorialedge.net/golang/go-file-upload-tutorial/
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
+func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
@@ -221,7 +221,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 // discard handler
 
-func discardHandler(w http.ResponseWriter, r *http.Request) {
+func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
 		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
@@ -241,7 +241,7 @@ func discardHandler(w http.ResponseWriter, r *http.Request) {
 
 // remove handler
 
-func removeHandler(w http.ResponseWriter, r *http.Request) {
+func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
 		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
@@ -258,7 +258,7 @@ func removeHandler(w http.ResponseWriter, r *http.Request) {
 
 // delete handler
 
-func deleteHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := getPageInfo(r)
 	if info.User.Password != "" {
 		name := info.User.Name
