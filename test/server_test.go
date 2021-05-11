@@ -295,11 +295,43 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	}
 }
 
+// https://stackoverflow.com/questions/29505089/how-can-i-compare-two-files-in-golang
+func areIdenticalFiles(file1 string, file2 string) bool {
+	chunk := 64000
+	f1, err := os.Open(file1)
+	if err != nil {
+		return false
+	}
+	defer f1.Close()
+
+	f2, err := os.Open(file2)
+	if err != nil {
+		return false
+	}
+	defer f2.Close()
+	for {
+		b1 := make([]byte, chunk)
+		_, err1 := f1.Read(b1)
+
+		b2 := make([]byte, chunk)
+		_, err2 := f2.Read(b2)
+
+		if err1 != nil || err2 != nil {
+			if err1 == io.EOF && err2 == io.EOF {
+				return true
+			} else {
+				return false
+			}
+		}
+		if !bytes.Equal(b1, b2) {
+			return false
+		}
+	}
+}
+
 // https://github.com/gobuffalo/httptest/blob/master/file.go
 func test_upload(t *testing.T, db *sql.DB, i int) {
 	// https://www.programmersought.com/article/6833575288/
-	//part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
-	//t.Errorf("here here %s;;;.", filepath.Base(filename))
 	filename := fmt.Sprintf("data/original/sample%d.jpeg", i%3+1)
 	fieldname := "photo_file"
 	bb := &bytes.Buffer{}
@@ -314,7 +346,6 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	if err != nil {
 		t.Errorf("File %s not found.", filename)
 	}
-
 	io.Copy(part, file)
 	contentType := writer.FormDataContentType()
 	file.Close()
@@ -325,44 +356,6 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	} else {
 		request.Header.Set("Content-Type", contentType)
 	}
-	/*content, err := os.ReadFile(filename)
-	if err != nil {
-		t.Errorf("The file is invalid.")
-	}
-	_, err = io.Copy(part, bytes.NewReader(content))
-	if err != nil {
-		t.Errorf("The file cannot be copied.")
-	}
-	err = writer.WriteField(fieldname, filename)
-	if err != nil {
-		t.Errorf("Cannot read file.")
-	}*/
-	// https://stackoverflow.com/questions/20205796/post-data-using-the-content-type-multipart-form-data
-	/*file, err := os.Open(filename)
-	if err != nil {
-		t.Errorf("File %s cannot be found.", filename)
-	}
-	values := map[string]io.Reader{
-		fieldname: file,
-	}
-	for k, r := range values {
-		var fw io.Writer
-		if x, ok := r.(io.Closer); ok {
-			defer x.Close()
-		}
-		if x, ok := r.(*os.File); ok {
-			if fw, err = writer.CreateFormFile(k, x.Name()); err != nil {
-				t.Errorf("Cannot create form file.")
-			}
-		} else {
-			if fw, err = writer.CreateFormField(k); err != nil {
-				t.Errorf("Cannot create field.")
-			}
-		}
-		if _, err = io.Copy(fw, r); err != nil {
-			t.Errorf("Cannot copy file writer")
-		}
-	}*/
 	response := httptest.NewRecorder()
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
@@ -383,7 +376,9 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	)
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.UploadHandler)).ServeHTTP(response, request)
-	t.Errorf("%s; %s", response.Header()["Photo"][0], response.Header()["Status"][0])
+	if !areIdenticalFiles(filename, fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)) {
+		t.Errorf("The file copied is wrong.")
+	}
 }
 
 func clearEffects(db *sql.DB) {
