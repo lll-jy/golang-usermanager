@@ -52,7 +52,7 @@ func tryConnection(db *sql.DB) {
 				log.Fatalf("Not able to establish connection to database")
 			}
 
-			go log.Printf(fmt.Sprintf("Could not connect to database. Wait 2 seconds. %d retries left...", retryCount))
+			log.Printf(fmt.Sprintf("Could not connect to database. Wait 2 seconds. %d retries left...", retryCount))
 			retryCount--
 			time.Sleep(2 * time.Second)
 		} else {
@@ -65,7 +65,7 @@ func setDb() {
 	var err error
 	db, err = sql.Open("mysql", "root:@/entryTask")
 	if err != nil {
-		go log.Printf("Error connecting to database. %s", err.Error())
+		log.Printf("Error connecting to database. %s", err.Error())
 	}
 	db.SetMaxOpenConns(200)
 	db.SetMaxIdleConns(10)

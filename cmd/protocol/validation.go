@@ -33,12 +33,12 @@ func ConvertToString(i interface{}) string {
 func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
 	if err != nil {
-		go log.Printf("Cannot parse query: %s", err.Error())
+		log.Printf("Cannot parse query: %s", err.Error())
 		return false
 	}
-	defer query.Close()
 	var p, pu, nn interface{}
 	query.QueryRow(username, user.Name).Scan(&p, &pu, &nn)
+	query.Close()
 	user.Password = ConvertToString(p)
 	user.PhotoUrl = ConvertToString(pu)
 	user.Nickname = ConvertToString(nn)

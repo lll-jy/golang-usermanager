@@ -13,8 +13,8 @@ import (
 
 func Test_massiveLogin(t *testing.T) {
 	db := server_helpers.SetupDb(t)
-	db.SetMaxOpenConns(2000)
-	db.SetMaxIdleConns(100)
+	db.SetMaxOpenConns(1000)
+	db.SetMaxIdleConns(500)
 	db.SetConnMaxLifetime(time.Minute * 3)
 	handlers.PrepareTemplates("../templates/%s.html")
 	paths.SetupPaths("test")
@@ -34,10 +34,14 @@ func Test_massiveLogin(t *testing.T) {
 			}
 		}
 	})
+	err := db.Close()
+	if err != nil {
+		t.Errorf("Unable to close database. %s.", err.Error())
+	}
 
 	end := time.Now()
 	dur := end.Sub(start).Seconds()
 	if dur > 1 {
-		t.Errorf("Time exceeds 1 seconds. Used %v seconds.", dur)
+		t.Errorf("Time exceeds 1 second. Used %v seconds.", dur)
 	}
 }
