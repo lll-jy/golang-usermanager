@@ -23,7 +23,7 @@ func Initialize(db *sql.DB) {
 		nickname    VARCHAR(30) COLLATE utf8mb4_unicode_ci
 	)`)
 	for i := 0; i < 200; i++ {
-		pass, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
+		pass, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), bcrypt.MinCost)
 		if err != nil {
 			log.Printf("Error: password %s cannot be hashed.", pass)
 		}

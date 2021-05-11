@@ -57,12 +57,12 @@ func ValidEditNickname(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
 	nickname := fmt.Sprintf("nick%d", i)
-	nicknew := fmt.Sprintf("mick%d", i)
-	_, user := EditExecute(t, db, name, pass, paths.PlaceholderPath, paths.PlaceholderPath, nickname, nicknew)
+	nickNew := fmt.Sprintf("mick%d", i)
+	_, user := EditExecute(t, db, name, pass, paths.PlaceholderPath, paths.PlaceholderPath, nickname, nickNew)
 	flag := protocol.IsExistingUsername(db, name, user)
 	if !flag {
 		t.Errorf("Wrongly deleted/updated primary key of %s.", name)
-	} else if user.Nickname != nicknew {
+	} else if user.Nickname != nickNew {
 		t.Errorf("Update of %s failed.", name)
 	}
 }

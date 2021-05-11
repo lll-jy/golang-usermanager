@@ -3,11 +3,11 @@ package protocol
 import (
 	"database/sql"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"regexp"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func IsValidUsername(username string) bool {
@@ -52,6 +52,6 @@ func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	}
 }
 
-func IsCorrectPassword(userpass string, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userpass)) == nil
+func IsCorrectPassword(userPass string, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userPass)) == nil
 }

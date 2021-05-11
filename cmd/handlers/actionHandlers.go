@@ -114,7 +114,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 				if rt == "/signup" {
 					log.Printf("New user %s signed up.", name)
 				}
-				hashed, err := bcrypt.GenerateFromPassword([]byte(pass), 3)
+				hashed, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.MinCost)
 				if err != nil {
 					log.Printf("Error: password %s cannot be hashed.", pass)
 				}

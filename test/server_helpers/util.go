@@ -102,7 +102,7 @@ func areIdenticalFiles(file1 string, file2 string) (bool, error) {
 func ClearEffects(db *sql.DB) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
 	for i := 0; i < 5; i++ {
-		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), bcrypt.MinCost)
 		handlers.ExecuteQuery(db, "UPDATE users SET password = ?, photo = ?, nickname = ? WHERE username = ?", hashed, nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
 	}
 }
