@@ -24,7 +24,7 @@ func decryptPhoto(url string, pass string, name string, photo *string) {
 	} else {
 		encrypted, err := ioutil.ReadFile(url)
 		if err != nil {
-			log.Printf("The encrypted file is invalid.")
+			log.Printf("The encrypted file %s is invalid because %s.", url, err.Error())
 		}
 		decrypted := decrypt(encrypted, pass)
 		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
@@ -228,7 +228,7 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			targetDir := paths.FileBasePath
 			tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
 			if err != nil {
-				log.Println("Error generating temporary file.")
+				log.Printf("Error generating temporary file. %s.", err.Error())
 			}
 			defer tempFile.Close()
 			fileBytes, err := ioutil.ReadAll(file)

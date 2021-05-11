@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
@@ -22,6 +23,9 @@ var router = mux.NewRouter()
 var db *sql.DB
 
 func setHandleFunc(router *mux.Router) {
+	handlers.PrepareTemplates("templates/%s.html")
+	paths.SetupPaths("main")
+
 	router.HandleFunc("/", makeHandler(handlers.IndexPageHandler))
 	router.HandleFunc("/view", makeHandler(handlers.ViewPageHandler))
 	router.HandleFunc("/signup", makeHandler(handlers.SignupPageHandler)).Methods("GET")

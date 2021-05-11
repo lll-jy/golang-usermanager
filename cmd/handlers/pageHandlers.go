@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-var TemplateFileNameFormat = "../templates/%s.html"
+/*var TemplateFileNameFormat = "templates/%s.html"
 var IndexTemplate = fmt.Sprintf(TemplateFileNameFormat, "index")
 var ViewTemplate = fmt.Sprintf(TemplateFileNameFormat, "view")
 var SignUpTemplate = fmt.Sprintf(TemplateFileNameFormat, "signup")
@@ -19,7 +19,19 @@ var templates = template.Must(template.ParseFiles(
 	ViewTemplate,
 	SignUpTemplate,
 	ProfileTemplate,
-))
+))*/
+
+// templates
+var templates *template.Template
+
+func PrepareTemplates(templateFileNameFormat string) {
+	templates = template.Must(template.ParseFiles(
+		fmt.Sprintf(templateFileNameFormat, "index"),
+		fmt.Sprintf(templateFileNameFormat, "view"),
+		fmt.Sprintf(templateFileNameFormat, "signup"),
+		fmt.Sprintf(templateFileNameFormat, "profile"),
+	))
+}
 
 func renderTemplate(w http.ResponseWriter, tmpl string, info *PageInfo) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", info)

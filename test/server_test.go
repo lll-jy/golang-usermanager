@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	_ "github.com/go-sql-driver/mysql"
 	"google.golang.org/protobuf/proto"
@@ -144,11 +145,15 @@ func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn
 	}
 }
 
-func test_valid_signup(t *testing.T, db *sql.DB, i int) {
+func signupExecute(t *testing.T, db *sql.DB, name string, pass string) http.Header {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
-	response, request := formSetup(fmt.Sprintf("name=testuser%d&password=testpass%d%d&password_repeat=testpass%d%d", i, i*2, i*2, i*2, i*2), t, db, "/signup")
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, pass), t, db, "/signup")
 	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
-	header := response.Header()
+	return response.Header()
+}
+
+func test_valid_signup(t *testing.T, db *sql.DB, i int) {
+	header := signupExecute(t, db, fmt.Sprintf("testuser%d", i), fmt.Sprintf("testpass%d%d", i*2, i*2))
 	user := getUser(header)
 	if user.Name != fmt.Sprintf("testuser%d", i) || header["Status"][0] != "successful signup" {
 		t.Errorf("Sign up for testuser%d unssucessful.", i)
@@ -164,28 +169,32 @@ func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, rep
 	}
 }
 
-func test_valid_reset_pass(t *testing.T, db *sql.DB, i int) {
-	name := fmt.Sprintf("testuser%d", i)
-	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
-	test_valid_signup(t, db, i)
+func resetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, new_name string, new_pass string) http.Header {
+	signupExecute(t, db, old_name, old_pass)
 	user := &protocol.User{}
-	protocol.IsExistingUsername(db, name, user)
-	user.Name = name
+	protocol.IsExistingUsername(db, old_name, user)
+	user.Name = old_name
 	cookieString := handlers.SetSessionInfo(
 		user,
 		&protocol.User{
-			Name:     name,
-			Password: pass,
+			Name:     old_name,
+			Password: old_pass,
 		},
 		handlers.InfoErr{},
 		"",
 	)
-	new_pass := fmt.Sprintf("testnewpass%d%d", i*2, i*2)
-	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, new_pass, new_pass), t, db, "/reset")
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", new_name, new_pass, new_pass), t, db, "/reset")
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.ResetHandler)).ServeHTTP(response, request)
-	header := response.Header()
-	user = getUser(header)
+	return response.Header()
+}
+
+func test_valid_reset_pass(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("testuser%d", i)
+	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
+	newPass := fmt.Sprintf("testnewpass%d%d", i*2, i*2)
+	header := resetExecute(t, db, name, pass, name, newPass)
+	user := getUser(header)
 	if header["Status"][0] != "successful signup" {
 		t.Errorf("Failed to reset password for %s due to %s.", name, header["Status"][0])
 	} else if user.Name != name {
@@ -195,7 +204,28 @@ func test_valid_reset_pass(t *testing.T, db *sql.DB, i int) {
 		flag := protocol.IsExistingUsername(db, name, user)
 		if !flag {
 			t.Errorf("Wrongly changed username in database.")
-		} else if !protocol.IsCorrectPassword(new_pass, user.Password) {
+		} else if !protocol.IsCorrectPassword(newPass, user.Password) {
+			t.Errorf("Failed to update password for %s.", name)
+		}
+	}
+}
+
+func test_valid_reset_name(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("testuser%d", i)
+	newName := fmt.Sprintf("testnewuser%d", i)
+	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
+	header := resetExecute(t, db, name, pass, newName, pass)
+	user := getUser(header)
+	if header["Status"][0] != "successful signup" {
+		t.Errorf("Failed to reset username for %s to %s.", name, newName)
+	} else if user.Name != newName {
+		t.Errorf("Failed to update username.")
+	} else {
+		user.Name = ""
+		flag := protocol.IsExistingUsername(db, name, user)
+		if !flag {
+			t.Errorf("Wrongly changed username in database.")
+		} else if !protocol.IsCorrectPassword(pass, user.Password) {
 			t.Errorf("Failed to update password for %s.", name)
 		}
 	}
@@ -286,12 +316,14 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	}
 
 	io.Copy(part, file)
+	contentType := writer.FormDataContentType()
 	file.Close()
+	writer.Close()
 	request, err := http.NewRequest(http.MethodPost, "/upload", bb)
 	if err != nil {
 		t.Errorf("Cannot make request.")
 	} else {
-		request.Header.Set("Content-Type", writer.FormDataContentType())
+		request.Header.Set("Content-Type", contentType)
 	}
 	/*content, err := os.ReadFile(filename)
 	if err != nil {
@@ -363,6 +395,8 @@ func clearEffects(db *sql.DB) {
 
 func Test_handlers(t *testing.T) {
 	db := setupDb(t)
+	handlers.PrepareTemplates("../templates/%s.html")
+	paths.SetupPaths("test")
 
 	t.Run("Restricted access", func(t *testing.T) {
 		for i := 0; i < 5; i++ {
@@ -424,9 +458,9 @@ func Test_handlers(t *testing.T) {
 		}
 	})
 
-	/*t.Run("Upload", func(t *testing.T) {
+	t.Run("Upload", func(t *testing.T) {
 		test_upload(t, db, 0)
-	})*/
+	})
 }
 
 /*func Test_login(t *testing.T) {
