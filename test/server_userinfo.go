@@ -116,7 +116,7 @@ func test_valid_reset_pass_with_photo(t *testing.T, db *sql.DB, i int) {
 				t.Errorf("Failed to update encrypted photo key accordingly.")
 			}
 			//if !areIdenticalFiles()
-			t.Errorf("photo is here %s", photo)
+			//t.Errorf("photo is here %s", user.PhotoUrl)
 		}
 	}
 }

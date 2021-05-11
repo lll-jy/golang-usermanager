@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -65,17 +66,17 @@ func updateCookie(cookieString string, response *httptest.ResponseRecorder, requ
 }
 
 // https://stackoverflow.com/questions/29505089/how-can-i-compare-two-files-in-golang
-func areIdenticalFiles(file1 string, file2 string) bool {
+func areIdenticalFiles(file1 string, file2 string) (bool, error) {
 	chunk := 64000
 	f1, err := os.Open(file1)
 	if err != nil {
-		return false
+		return false, err
 	}
 	defer f1.Close()
 
 	f2, err := os.Open(file2)
 	if err != nil {
-		return false
+		return false, err
 	}
 	defer f2.Close()
 	for {
@@ -87,13 +88,13 @@ func areIdenticalFiles(file1 string, file2 string) bool {
 
 		if err1 != nil || err2 != nil {
 			if err1 == io.EOF && err2 == io.EOF {
-				return true
+				return true, nil
 			} else {
-				return false
+				return false, errors.New("File length different")
 			}
 		}
 		if !bytes.Equal(b1, b2) {
-			return false
+			return false, nil
 		}
 	}
 }

@@ -59,11 +59,18 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 			Nickname: nickname,
 		},
 		handlers.InfoErr{},
-		"assets/placeholder.jpeg",
+		paths.PlaceholderPath,
 	)
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.UploadHandler)).ServeHTTP(response, request)
-	if !areIdenticalFiles(filename, fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)) {
+	header := response.Header()
+	photo := header["Photo"][0]
+	flag, err := areIdenticalFiles(filename, photo)
+	if err != nil {
+		t.Errorf("The files %s are invalid. %s.", photo, err.Error())
+	} else if !flag {
 		t.Errorf("The file copied is wrong.")
 	}
+	//cookie, _ := response.Result().Request.Cookie("session")
+	//t.Errorf("Here is the place. %v \n new is: %v", response.Result().Cookies(), cookie)
 }

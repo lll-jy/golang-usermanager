@@ -29,7 +29,11 @@ func DecryptPhoto(url string, pass string, name string, photo *string) error {
 		}
 		decrypted := decrypt(encrypted, pass)
 		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
-		ioutil.WriteFile(*photo, decrypted, 0600)
+		err = ioutil.WriteFile(*photo, decrypted, 0600)
+		if err != nil {
+			log.Printf("Cannot write file. %s.", err.Error())
+			return err
+		}
 	}
 	return nil
 }

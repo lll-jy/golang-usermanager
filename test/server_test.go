@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
@@ -69,7 +70,11 @@ func Test_handlers(t *testing.T) {
 	t.Run("Edit", func(t *testing.T) {
 		clearEffects(db)
 		for i := 0; i < 5; i++ {
-			test_valid_edit(t, db, i)
+			test_valid_edit_nickname(t, db, i)
+		}
+		clearEffects(db)
+		for i := 0; i < 5; i++ {
+			//test_valid_edit_photo_uploaded(t, db, i)
 		}
 	})
 
@@ -90,6 +95,17 @@ func Test_handlers(t *testing.T) {
 			test_invalid_reset_duplicate(t, db, i)
 		}
 	})
+
+	err := os.RemoveAll(paths.TempPath)
+	if err != nil {
+		t.Errorf("Cannot remove directory, %v", err.Error())
+	}
+	os.MkdirAll(paths.TempPath, 0777)
+	err = os.RemoveAll(paths.FileBaseRelativePath)
+	if err != nil {
+		t.Errorf("Cannot remove directory, %v", err.Error())
+	}
+	os.MkdirAll(paths.FileBaseRelativePath, 0777)
 }
 
 /*func Test_login(t *testing.T) {
