@@ -220,8 +220,9 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	info := GetPageInfo(r)
-	header.Set("photo", info.Photo)
+	header.Set("tempPhoto", info.Photo)
 	header.Set("status", "")
+	header.Set("photo", "")
 	if info.User.Password != "" {
 		r.ParseMultipartForm(10 << 20) // < 10 MB files
 		file, handler, err := r.FormFile("photo_file")
@@ -243,12 +244,13 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			}
 			tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
 			dirs := strings.Split(tempFile.Name(), "/")
-			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", paths.FileBaseRelativePath, dirs[len(dirs)-1]) // EXTEND: same as above
+			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", paths.FileBaseRelativePath, dirs[len(dirs)-1])
 			DecryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
-			header.Set("photo", info.Photo)
+			header.Set("tempPhoto", info.Photo)
 			header.Set("status", "success")
+			header.Set("photo", info.TempUser.PhotoUrl)
 		}
 		http.Redirect(w, r, "/edit", 302)
 	} else {

@@ -17,7 +17,7 @@ import (
 )
 
 // https://github.com/gobuffalo/httptest/blob/master/file.go
-func test_upload(t *testing.T, db *sql.DB, i int) {
+func test_upload(t *testing.T, db *sql.DB, i int) string {
 	// https://www.programmersought.com/article/6833575288/
 	filename := fmt.Sprintf("data/original/sample%d.jpeg", i%3+1)
 	fieldname := "photo_file"
@@ -64,13 +64,12 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.UploadHandler)).ServeHTTP(response, request)
 	header := response.Header()
-	photo := header["Photo"][0]
+	photo := header["Tempphoto"][0]
 	flag, err := areIdenticalFiles(filename, photo)
 	if err != nil {
 		t.Errorf("The files %s are invalid. %s.", photo, err.Error())
 	} else if !flag {
 		t.Errorf("The file copied is wrong.")
 	}
-	//cookie, _ := response.Result().Request.Cookie("session")
-	//t.Errorf("Here is the place. %v \n new is: %v", response.Result().Cookies(), cookie)
+	return header["Photo"][0]
 }

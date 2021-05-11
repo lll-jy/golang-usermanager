@@ -74,7 +74,7 @@ func Test_handlers(t *testing.T) {
 		}
 		clearEffects(db)
 		for i := 0; i < 5; i++ {
-			//test_valid_edit_photo_uploaded(t, db, i)
+			test_valid_edit_photo_uploaded(t, db, i)
 		}
 	})
 
