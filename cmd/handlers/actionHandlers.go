@@ -30,6 +30,7 @@ func decryptPhoto(url string, pass string, name string, photo *string) {
 		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
 		ioutil.WriteFile(*photo, decrypted, 0600)
 	}
+	*photo = fmt.Sprintf("../%s", *photo)
 }
 
 func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -221,7 +222,7 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		file, handler, err := r.FormFile("photo_file")
 		if err != nil {
 			log.Println("Error retrieving file.")
-			header.Set("status", fmt.Sprintf("cannot retrieve: %s ||\n %v", err, r.Body))
+			header.Set("status", fmt.Sprintf("cannot retrieve: %s ||\n", err))
 		} else {
 			defer file.Close()
 			log.Printf("Photo %s uploaded for user %s. The file size is %+v. MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header)
@@ -272,12 +273,16 @@ func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 // remove handler
 
+func removeFile(src string, validator string) {
+	if validator != "" && validator != paths.PlaceholderPath {
+		os.Remove(src[3:])
+	}
+}
+
 func RemoveHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
-		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
-			os.Remove(info.Photo)
-		}
+		removeFile(info.Photo, info.Photo)
 		setSession(info.User, info.TempUser, info.InfoErr, paths.PlaceholderPath, w)
 		ExecuteQuery(db, "UPDATE users SET photo = NULL WHERE username = ?", info.User.Name)
 		http.Redirect(w, r, "/edit", 302)
@@ -304,12 +309,8 @@ func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			log.Printf("User %s deleted.", name)
 			header.Set("status", fmt.Sprintf("delete %s", name))
 		}
-		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
-			os.Remove(info.Photo)
-		}
-		if info.Photo != "" && info.Photo != paths.PlaceholderPath {
-			os.Remove(info.User.PhotoUrl)
-		}
+		removeFile(info.Photo, info.Photo)
+		removeFile(info.User.PhotoUrl, info.Photo)
 		clearSession(w)
 	}
 	http.Redirect(w, r, "/", 302)

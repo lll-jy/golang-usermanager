@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -235,20 +234,22 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 	fieldname := "photo_file"
 	bb := &bytes.Buffer{}
 	writer := multipart.NewWriter(bb)
-	//defer writer.Close()
+	defer writer.Close()
 	// https://www.programmersought.com/article/6833575288/
-	part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
+	//part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
+	//t.Errorf("here here %s;;;.", filepath.Base(filename))
+	part, err := writer.CreateFormFile(fieldname, filename)
 	if err != nil {
 		t.Errorf("The file cannot be created as form file.")
 		writer.Close()
 	}
-	t.Errorf("%v", part)
 	file, err := os.Open(filename)
 	if err != nil {
 		t.Errorf("File %s not found.", filename)
 	}
-	defer file.Close()
+
 	io.Copy(part, file)
+	file.Close()
 	/*content, err := os.ReadFile(filename)
 	if err != nil {
 		t.Errorf("The file is invalid.")
@@ -288,10 +289,6 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 		}
 	}*/
 	request, err := http.NewRequest(http.MethodPost, "/upload", bb)
-	//f, _, _ := request.FormFile(fieldname)
-	//fb, _ := ioutil.ReadAll(f)
-	//os.WriteFile("test.jpeg", fb, 0600)
-	//t.Errorf("here hrere: %v\n%v", f, bb)
 	if err != nil {
 		t.Errorf("Cannot make request.")
 	} else {
