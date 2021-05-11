@@ -1,4 +1,4 @@
-package test
+package server_helpers
 
 import (
 	"database/sql"
@@ -10,14 +10,14 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 )
 
-func loginExecute(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
+func LoginExecute(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecorder {
 	response, request := formSetup(body, t, db, "/login")
 	http.HandlerFunc(makeHandler(db, handlers.LoginHandler)).ServeHTTP(response, request)
 	return response
 }
 
-func test_single_user_login(t *testing.T, i int, db *sql.DB) {
-	response := loginExecute(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2), t, db)
+func ValidLogin(t *testing.T, i int, db *sql.DB) {
+	response := LoginExecute(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2), t, db)
 	header := response.Header()
 	user := getUser(header)
 	if user.Name != fmt.Sprintf("user%d", i) || header["Status"][0] != "successful login" {
@@ -27,8 +27,8 @@ func test_single_user_login(t *testing.T, i int, db *sql.DB) {
 	}
 }
 
-func test_invalid_user_login(t *testing.T, info string, db *sql.DB, expectedErr string, errString string) {
-	response := loginExecute(info, t, db)
+func InvalidLogin(t *testing.T, info string, db *sql.DB, expectedErr string, errString string) {
+	response := LoginExecute(info, t, db)
 	header := response.Header()
 	if header["Status"][0] != expectedErr {
 		t.Errorf(errString)

@@ -1,4 +1,4 @@
-package test
+package server_helpers
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 )
 
-func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
+func ExecuteRestrictedTemplate(t *testing.T, db *sql.DB, cookieString string, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
 	response := httptest.NewRecorder()
 	request := makeRequest(http.MethodGet, url, t)
 	updateCookie(cookieString, response, request)
@@ -20,7 +20,7 @@ func test_restricted_template_resulting_header(t *testing.T, db *sql.DB, cookieS
 	return header
 }
 
-func test_restricted_template_granted_access(t *testing.T, db *sql.DB, i int, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
+func GrantedRestrictedTemplate(t *testing.T, db *sql.DB, i int, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{
 			Name:     fmt.Sprintf("user%d", i),
@@ -30,20 +30,20 @@ func test_restricted_template_granted_access(t *testing.T, db *sql.DB, i int, ur
 		handlers.InfoErr{},
 		"",
 	)
-	header := test_restricted_template_resulting_header(t, db, cookieString, url, fn)
+	header := ExecuteRestrictedTemplate(t, db, cookieString, url, fn)
 	if header["Status"][0] != "successful view" {
 		t.Errorf("Failed access to restricted page for user%d", i)
 	}
 }
 
-func test_restricted_template_no_access(t *testing.T, db *sql.DB, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
+func DeniedRestrictedTemplate(t *testing.T, db *sql.DB, url string, fn func(*sql.DB, http.ResponseWriter, *http.Request)) {
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{},
 		&protocol.User{},
 		handlers.InfoErr{},
 		"",
 	)
-	header := test_restricted_template_resulting_header(t, db, cookieString, url, fn)
+	header := ExecuteRestrictedTemplate(t, db, cookieString, url, fn)
 	if header["Status"][0] != "login error" {
 		t.Errorf("Wrongly granted access.")
 	}

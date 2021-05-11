@@ -18,11 +18,11 @@ Run `go test test/validation_test.go`.
 
 ### Handlers Unit Testing
 
-Run `go test test/server*.go`.
+Run `go test test/server_test.go`.
 
 ### Massive Testing for Performance
 
-Run `go test`. 
+Run `go test test/performance_test.go -parallel 1000`. 
 
 ## Extension
 

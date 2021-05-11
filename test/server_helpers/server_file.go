@@ -1,4 +1,4 @@
-package test
+package server_helpers
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 )
 
 // https://github.com/gobuffalo/httptest/blob/master/file.go
-func test_upload(t *testing.T, db *sql.DB, i int) string {
+func Upload(t *testing.T, db *sql.DB, i int) string {
 	// https://www.programmersought.com/article/6833575288/
 	filename := fmt.Sprintf("data/original/sample%d.jpeg", i%3+1)
 	fieldname := "photo_file"

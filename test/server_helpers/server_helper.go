@@ -1,4 +1,4 @@
-package test
+package server_helpers
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ func makeRequest(method string, url string, t *testing.T) *http.Request {
 	}
 	return request
 }
-func setupDb(t *testing.T) *sql.DB {
+func SetupDb(t *testing.T) *sql.DB {
 	db, err := sql.Open("mysql", "root:@/entryTask")
 	if err != nil {
 		t.Errorf("Database connection failed: %v", err.Error())
@@ -99,7 +99,7 @@ func areIdenticalFiles(file1 string, file2 string) (bool, error) {
 	}
 }
 
-func clearEffects(db *sql.DB) {
+func ClearEffects(db *sql.DB) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
 	for i := 0; i < 5; i++ {
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
