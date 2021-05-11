@@ -36,7 +36,7 @@ func editExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, n
 	return response.Header(), user
 }
 
-func test_valid_edit_photo_uploaded(t *testing.T, db *sql.DB, i int) {
+func test_valid_edit_photo_uploaded(t *testing.T, db *sql.DB, i int) string {
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
 	nick := fmt.Sprintf("nick%d", i)
@@ -44,15 +44,13 @@ func test_valid_edit_photo_uploaded(t *testing.T, db *sql.DB, i int) {
 	photo := test_upload(t, db, i)
 	editExecute(t, db, name, pass, photo, tempPhoto, nick, nick)
 	user := &protocol.User{}
-	//user = getUser(header)
-	//t.Errorf("See here: %v", user)
 	flag := protocol.IsExistingUsername(db, name, user)
-	//t.Errorf("See there: %v", user)
 	if !flag {
 		t.Errorf("Wrongly deleted user from database.")
 	} else if user.PhotoUrl != photo {
 		t.Errorf("The photo uploaded wrongly.")
 	}
+	return photo
 }
 
 func test_valid_edit_nickname(t *testing.T, db *sql.DB, i int) {

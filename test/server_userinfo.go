@@ -35,18 +35,10 @@ func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, rep
 	}
 }
 
-func resetExecuteCookie(t *testing.T, db *sql.DB, info *handlers.PageInfo) http.Header {
-	cookieString := handlers.SetSessionInfo(
-		info.User,
-		info.TempUser,
-		handlers.InfoErr{},
-		info.Photo,
-	)
-	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", info.TempUser.Name, info.TempUser.Password, info.TempUser.Password), t, db, "/reset")
-	updateCookie(cookieString, response, request)
-	http.HandlerFunc(makeHandler(db, handlers.ResetHandler)).ServeHTTP(response, request)
-	return response.Header()
-}
+/*func resetExecute(t *testing.T, db *sql.DB, old *protocol.User, new *protocol.User, photo string) http.Header {
+	signupExecute(t, db, old.Name, old.Password)
+
+}*/
 
 func resetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, new_name string, new_pass string, photo string) http.Header {
 	signupExecute(t, db, old_name, old_pass)
@@ -93,10 +85,9 @@ func test_valid_reset_pass_with_photo(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
 	newPass := fmt.Sprintf("newpass%d%d", i*2, i*2)
-	photo := fmt.Sprintf("%s/useruser%d.jpeg", paths.TempPath, i)
-	test_upload(t, db, i)
-	//t.Errorf("here is cookies %v.", cookies)
-	header := resetExecute(t, db, name, pass, name, newPass, photo)
+	tempPhoto := fmt.Sprintf("%s/useruser%d.jpeg", paths.TempPath, i)
+	photo := test_valid_edit_photo_uploaded(t, db, i)
+	header := resetExecute(t, db, name, pass, name, newPass, tempPhoto)
 	user := getUser(header)
 	if header["Status"][0] != "successful signup" {
 		t.Errorf("Failed to reset password for %s due to %s.", name, header["Status"][0])
@@ -110,13 +101,17 @@ func test_valid_reset_pass_with_photo(t *testing.T, db *sql.DB, i int) {
 		} else if !protocol.IsCorrectPassword(newPass, user.Password) {
 			t.Errorf("Failed to update password for %s.", name)
 		} else {
-			var photo string
 			err := handlers.DecryptPhoto(user.PhotoUrl, newPass, name, &photo)
 			if err != nil {
 				t.Errorf("Failed to update encrypted photo key accordingly.")
 			}
-			//if !areIdenticalFiles()
-			//t.Errorf("photo is here %s", user.PhotoUrl)
+			sample := fmt.Sprintf("data/original/sample%d.jpeg", i % 3 + 1)
+			flag, err := areIdenticalFiles(photo, sample)
+			if err != nil {
+				t.Errorf("Cannot retrieve file, %s", err.Error())
+			} else if !flag {
+				t.Errorf("The file is not decrypted correctly.")
+			}
 		}
 	}
 }
