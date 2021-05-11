@@ -25,7 +25,7 @@ func Initialize(db *sql.DB) {
 	for i := 0; i < 200; i++ {
 		pass, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
 		if err != nil {
-			log.Printf("Error: password %s cannot be hashed.", pass)
+			go log.Printf("Error: password %s cannot be hashed.", pass)
 		}
 		ExecuteQuery(db, "INSERT INTO users VALUES(?, ?, ?, ?)",
 			fmt.Sprintf("user%d", i),

@@ -22,11 +22,11 @@ func prepare(pass string) cipher.AEAD {
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("Cannot crate cipher block from key %v.", key)
+		go log.Printf("Cannot crate cipher block from key %v.", key)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		log.Printf("Cannot create new GCM from block %v.", block)
+		go log.Printf("Cannot create new GCM from block %v.", block)
 	}
 	return gcm
 }
@@ -36,7 +36,7 @@ func encrypt(toEncrypt []byte, pass string) []byte {
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		log.Printf("Cannot create nonce from gcm %v.", nonce)
+		go log.Printf("Cannot create nonce from gcm %v.", nonce)
 	}
 	return gcm.Seal(nonce, nonce, toEncrypt, nil)
 }
@@ -47,7 +47,7 @@ func decrypt(encrpyted []byte, pass string) []byte {
 	nonce, ciphered := encrpyted[:nonceSize], encrpyted[nonceSize:]
 	decrypted, err := gcm.Open(nil, nonce, ciphered, nil)
 	if err != nil {
-		log.Printf("Cannot decrypt data.")
+		go log.Printf("Cannot decrypt data.")
 	}
 	return decrypted
 }

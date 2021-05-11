@@ -16,11 +16,17 @@ func LoginExecute(body string, t *testing.T, db *sql.DB) *httptest.ResponseRecor
 	return response
 }
 
+func Login(t *testing.T, db *sql.DB, i int) {
+	LoginExecute(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2), t, db)
+}
+
 func ValidLogin(t *testing.T, i int, db *sql.DB) {
 	response := LoginExecute(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2), t, db)
 	header := response.Header()
 	user := getUser(header)
-	if user.Name != fmt.Sprintf("user%d", i) || header["Status"][0] != "successful login" {
+	if user.Name != fmt.Sprintf("user%d", i) {
+		t.Errorf("Login wrongly changed username.")
+	} else if header["Status"][0] != "successful login" {
 		t.Errorf("Login to user%d unsuccessful.", i)
 	} else if user.Nickname != fmt.Sprintf("nick%d", i) {
 		t.Errorf("Wrong information retrieved.")

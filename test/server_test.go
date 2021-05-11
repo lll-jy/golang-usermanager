@@ -108,26 +108,3 @@ func Test_handlers(t *testing.T) {
 	}
 	os.MkdirAll(paths.FileBaseRelativePath, 0777)
 }
-
-/*func Test_login(t *testing.T) {
-	t.Run("Test simultaneous login", func(t *testing.T) {
-		db := setupDb(t)
-
-		start := time.Now()
-		for j := 0; j < 3; j++ {
-			for i := 100; i < 110; i++ {
-				i := i
-				t.Run(fmt.Sprintf("Test login to user%d", 0), func(t *testing.T) {
-					t.Parallel()
-					test_single_user_login(t, i, db)
-				})
-			}
-		}
-		end := time.Now()
-		dur := end.Sub(start).Seconds()
-		t.Logf("It takes %v seconds to complete.", dur)
-		if dur > 1 {
-			t.Errorf("Time out")
-		}
-	})
-}*/

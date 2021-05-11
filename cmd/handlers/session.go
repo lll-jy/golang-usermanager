@@ -24,7 +24,7 @@ func createUser(name string, pass string) protocol.User {
 }
 
 type InfoErr struct {
-	NameErr       string
+	NameErr           string
 	PasswordErr       string
 	PasswordRepeatErr string
 }
@@ -43,14 +43,14 @@ type PageInfo struct {
 func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo string) (info PageInfo) {
 	u := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(user), u); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user.", user)
+		go log.Printf("Error: wrong format! %s cannot be parsed as a user.", user)
 	}
 	tu := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(tempUser), tu); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user)", tempUser)
+		go log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user)", tempUser)
 	}
 	ie := InfoErr{
-		NameErr:       nameErr,
+		NameErr:           nameErr,
 		PasswordErr:       passErr,
 		PasswordRepeatErr: repeatPassErr,
 	}
@@ -86,11 +86,11 @@ func GetPageInfo(r *http.Request) (info PageInfo) {
 func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo string) string {
 	user, err := proto.Marshal(u)
 	if err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user.", u)
+		go log.Printf("Error: wrong format! %s cannot be parsed as a user.", u)
 	}
 	tempUser, err := proto.Marshal(tu)
 	if err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user).", tu)
+		go log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user).", tu)
 	}
 	value := map[string]string{
 		"user":          string(user),
@@ -103,7 +103,7 @@ func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo strin
 	if encoded, err := cookieHandler.Encode("session", value); err == nil {
 		return encoded
 	} else {
-		log.Printf("Session cannot be parsed and encoded.")
+		go log.Printf("Session cannot be parsed and encoded.")
 		return ""
 	}
 }
