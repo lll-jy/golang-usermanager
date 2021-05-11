@@ -11,10 +11,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Test_speed(t *testing.T) {
+func Test_massiveLogin(t *testing.T) {
 	db := server_helpers.SetupDb(t)
+	db.SetMaxOpenConns(1000)
+	db.SetMaxIdleConns(100)
+	db.SetConnMaxLifetime(time.Minute * 3)
 	handlers.PrepareTemplates("../templates/%s.html")
 	paths.SetupPaths("test")
+	t.Log("Start logging in.")
 	//handlers.Initialize(db)
 	start := time.Now()
 	t.Run("Test speed to handle requests", func(t *testing.T) {
@@ -23,8 +27,8 @@ func Test_speed(t *testing.T) {
 			for i := 0; i < 200; i++ {
 				i := i
 				t.Run(fmt.Sprintf("Login to user%d#%d", i, j), func(t *testing.T) {
-					//server_helpers.ValidLogin(t, i, db)
-					server_helpers.LoginExecute(fmt.Sprintf("name=user%d&password=pass%d%d", i, i*2, i*2), t, db)
+					t.Parallel()
+					server_helpers.ValidLogin(t, i, db)
 				})
 			}
 		}
