@@ -164,6 +164,43 @@ func test_invalid_signup(t *testing.T, db *sql.DB, name string, pass string, rep
 	}
 }
 
+func test_valid_reset_pass(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("testuser%d", i)
+	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
+	test_valid_signup(t, db, i)
+	user := &protocol.User{}
+	protocol.IsExistingUsername(db, name, user)
+	user.Name = name
+	cookieString := handlers.SetSessionInfo(
+		user,
+		&protocol.User{
+			Name:     name,
+			Password: pass,
+		},
+		handlers.InfoErr{},
+		"",
+	)
+	new_pass := fmt.Sprintf("testnewpass%d%d", i*2, i*2)
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, new_pass, new_pass), t, db, "/reset")
+	updateCookie(cookieString, response, request)
+	http.HandlerFunc(makeHandler(db, handlers.ResetHandler)).ServeHTTP(response, request)
+	header := response.Header()
+	user = getUser(header)
+	if header["Status"][0] != "successful signup" {
+		t.Errorf("Failed to reset password for %s due to %s.", name, header["Status"][0])
+	} else if user.Name != name {
+		t.Errorf("Wrongly reset username.")
+	} else {
+		user.Name = ""
+		flag := protocol.IsExistingUsername(db, name, user)
+		if !flag {
+			t.Errorf("Wrongly changed username in database.")
+		} else if !protocol.IsCorrectPassword(new_pass, user.Password) {
+			t.Errorf("Failed to update password for %s.", name)
+		}
+	}
+}
+
 func delete_execute(t *testing.T, db *sql.DB, name string, pass string) http.Header {
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{
@@ -230,14 +267,14 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 
 // https://github.com/gobuffalo/httptest/blob/master/file.go
 func test_upload(t *testing.T, db *sql.DB, i int) {
+	// https://www.programmersought.com/article/6833575288/
+	//part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
+	//t.Errorf("here here %s;;;.", filepath.Base(filename))
 	filename := fmt.Sprintf("data/original/sample%d.jpeg", i%3+1)
 	fieldname := "photo_file"
 	bb := &bytes.Buffer{}
 	writer := multipart.NewWriter(bb)
 	defer writer.Close()
-	// https://www.programmersought.com/article/6833575288/
-	//part, err := writer.CreateFormFile(fieldname, filepath.Base(filename))
-	//t.Errorf("here here %s;;;.", filepath.Base(filename))
 	part, err := writer.CreateFormFile(fieldname, filename)
 	if err != nil {
 		t.Errorf("The file cannot be created as form file.")
@@ -250,6 +287,12 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 
 	io.Copy(part, file)
 	file.Close()
+	request, err := http.NewRequest(http.MethodPost, "/upload", bb)
+	if err != nil {
+		t.Errorf("Cannot make request.")
+	} else {
+		request.Header.Set("Content-Type", writer.FormDataContentType())
+	}
 	/*content, err := os.ReadFile(filename)
 	if err != nil {
 		t.Errorf("The file is invalid.")
@@ -288,12 +331,6 @@ func test_upload(t *testing.T, db *sql.DB, i int) {
 			t.Errorf("Cannot copy file writer")
 		}
 	}*/
-	request, err := http.NewRequest(http.MethodPost, "/upload", bb)
-	if err != nil {
-		t.Errorf("Cannot make request.")
-	} else {
-		request.Header.Set("Content-Type", writer.FormDataContentType())
-	}
 	response := httptest.NewRecorder()
 	name := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
@@ -380,9 +417,16 @@ func Test_handlers(t *testing.T) {
 		}
 	})
 
-	t.Run("Upload", func(t *testing.T) {
-		test_upload(t, db, 0)
+	t.Run("Reset", func(t *testing.T) {
+		clearEffects(db)
+		for i := 0; i < 5; i++ {
+			test_valid_reset_pass(t, db, i)
+		}
 	})
+
+	/*t.Run("Upload", func(t *testing.T) {
+		test_upload(t, db, 0)
+	})*/
 }
 
 /*func Test_login(t *testing.T) {

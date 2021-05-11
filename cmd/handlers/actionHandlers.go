@@ -30,7 +30,6 @@ func decryptPhoto(url string, pass string, name string, photo *string) {
 		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
 		ioutil.WriteFile(*photo, decrypted, 0600)
 	}
-	*photo = fmt.Sprintf("../%s", *photo)
 }
 
 func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -275,7 +274,7 @@ func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 func removeFile(src string, validator string) {
 	if validator != "" && validator != paths.PlaceholderPath {
-		os.Remove(src[3:])
+		os.Remove(src)
 	}
 }
 
