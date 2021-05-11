@@ -10,6 +10,7 @@
 <form method="POST" action="/edit">
     <label for="nickname">Nickname</label>
     <input type="text" id="nickname" name="nickname" value={{.TempUser.Nickname}}>
+    <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.NameErr}}</err>
     <br><br>
     <button type="submit">Save</button>
 </form>

@@ -2,7 +2,7 @@
 <form method="POST" action="/login">
     <label for="name">Username</label>
     <input type="text" id="name" name="name" value={{.TempUser.Name}}>
-    <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.UsernameErr}}</err>
+    <err style="font-size: small; color: red;">{{printf "%s" .InfoErr.NameErr}}</err>
     <br><br>
     <label for="password">Password</label>
     <input type="password" id="password" name="password" value={{.TempUser.Password}}>

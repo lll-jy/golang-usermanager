@@ -108,7 +108,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 	if protocol.IsValidUsername(name) {
 		if protocol.IsExistingUsername(db, name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
-			ie.UsernameErr = fmt.Sprintf("The username %s already exists.", name)
+			ie.NameErr = fmt.Sprintf("The username %s already exists.", name)
 			header.Set("status", "user already exists")
 		} else if protocol.IsValidPassword(pass) {
 			if pass == repeatPass {
@@ -163,7 +163,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 		}
 	} else {
 		log.Printf("User signup/reset failture: invalid username format of %s.", name)
-		ie.UsernameErr = "The username format is not valid."
+		ie.NameErr = "The username format is not valid."
 		header.Set("status", "wrong username format")
 	}
 	setSession(u, &tu, ie, info.Photo, w)
@@ -189,28 +189,34 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
 		info.TempUser.Nickname = r.FormValue("nickname")
-		photo := interface{}(info.TempUser.PhotoUrl)
-		if info.Photo == paths.PlaceholderPath || info.Photo == "" {
-			photo = nil
-		}
-		nickname := interface{}(info.TempUser.Nickname)
-		if info.TempUser.Nickname == "" {
-			nickname = nil
-		}
-		ExecuteQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
-		log.Printf("User information of %s updated.", info.User.Name)
-		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
-			err := os.Remove(info.User.PhotoUrl)
-			if err == nil {
-				log.Printf("Removed original photo from database.")
-			} else {
-				log.Printf(err.Error())
+		if len(info.TempUser.Nickname) > 20 {
+			info.InfoErr.NameErr = "Nickname too long."
+			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
+			http.Redirect(w, r, "/edit", 302)
+		} else {
+			photo := interface{}(info.TempUser.PhotoUrl)
+			if info.Photo == paths.PlaceholderPath || info.Photo == "" {
+				photo = nil
 			}
+			nickname := interface{}(info.TempUser.Nickname)
+			if info.TempUser.Nickname == "" {
+				nickname = nil
+			}
+			ExecuteQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", photo, nickname, info.User.Name)
+			log.Printf("User information of %s updated.", info.User.Name)
+			if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
+				err := os.Remove(info.User.PhotoUrl)
+				if err == nil {
+					log.Printf("Removed original photo from database.")
+				} else {
+					log.Printf(err.Error())
+				}
+			}
+			info.User.PhotoUrl = protocol.ConvertToString(photo)
+			info.User.Nickname = info.TempUser.Nickname
+			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
+			http.Redirect(w, r, "/view", 302)
 		}
-		info.User.PhotoUrl = protocol.ConvertToString(photo)
-		info.User.Nickname = info.TempUser.Nickname
-		setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
-		http.Redirect(w, r, "/view", 302)
 	} else {
 		http.Redirect(w, r, "/", 302)
 	}

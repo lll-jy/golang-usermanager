@@ -24,7 +24,7 @@ func createUser(name string, pass string) protocol.User {
 }
 
 type InfoErr struct {
-	UsernameErr       string
+	NameErr       string
 	PasswordErr       string
 	PasswordRepeatErr string
 }
@@ -50,7 +50,7 @@ func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo str
 		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user)", tempUser)
 	}
 	ie := InfoErr{
-		UsernameErr:       nameErr,
+		NameErr:       nameErr,
 		PasswordErr:       passErr,
 		PasswordRepeatErr: repeatPassErr,
 	}
@@ -95,7 +95,7 @@ func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo strin
 	value := map[string]string{
 		"user":          string(user),
 		"temp":          string(tempUser),
-		"nameErr":       ie.UsernameErr,
+		"nameErr":       ie.NameErr,
 		"passErr":       ie.PasswordErr,
 		"repeatPassErr": ie.PasswordRepeatErr,
 		"photo":         photo,
