@@ -15,6 +15,21 @@ func Test_massiveRequests(t *testing.T) {
 	start := time.Now()
 
 	t.Run("Test mixed requests handling speed", func(t *testing.T) {
+		for i := 0; i < 200; i++ {
+			i := i
+			go t.Run(fmt.Sprintf("Login to non-existing user useruser%d", i), func(t *testing.T) {
+				t.Parallel()
+				//server_helpers.InvalidLogin(t, fmt.Sprintf("name=user%d&password=pass%d", i, i), db, "incorrect password", fmt.Sprintf("Wrong password for user%d not detected correctly.", i))
+				server_helpers.InvalidLogin(t, fmt.Sprintf("name=useruser%d&password=pass%d", i, i), db, "user not exist", fmt.Sprintf("Non-existing user useruser%d not detected correctly.", i))
+			})
+			go t.Run(fmt.Sprintf("Login to user%d", i), func(t *testing.T) {
+				t.Parallel()
+				server_helpers.ValidLogin(t, i, db)
+			})
+		}
+	})
+
+	/*t.Run("Test mixed requests handling speed", func(t *testing.T) {
 		t.Run("Login", func(t *testing.T) {
 			t.Parallel()
 			for i := 0; i < 200; i++ {
@@ -52,7 +67,8 @@ func Test_massiveRequests(t *testing.T) {
 			}
 		})*/
 		//server_helpers.ValidEditNickname(t, db, 0)
-	})
+	//})
+	defer db.Close()
 
 	end := time.Now()
 	dur := end.Sub(start).Seconds()
