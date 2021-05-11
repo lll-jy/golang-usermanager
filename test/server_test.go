@@ -226,7 +226,7 @@ func test_valid_reset_name(t *testing.T, db *sql.DB, i int) {
 		if !flag {
 			t.Errorf("Wrongly changed username in database.")
 		} else if !protocol.IsCorrectPassword(pass, user.Password) {
-			t.Errorf("Failed to update password for %s.", name)
+			t.Errorf("Wrongly updated password when changing username for %s to %s.", name, newName)
 		}
 	}
 }
@@ -450,6 +450,10 @@ func Test_handlers(t *testing.T) {
 		clearEffects(db)
 		for i := 0; i < 5; i++ {
 			test_valid_reset_pass(t, db, i)
+		}
+		clearEffects(db)
+		for i := 0; i < 5; i++ {
+			test_valid_reset_name(t, db, i)
 		}
 	})
 
