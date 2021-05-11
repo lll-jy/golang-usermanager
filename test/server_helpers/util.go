@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
@@ -36,6 +38,16 @@ func SetupDb(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Errorf("Database connection failed: %v", err.Error())
 	}
+	return db
+}
+
+func Setup(t *testing.T) *sql.DB {
+	db := SetupDb(t)
+	db.SetMaxOpenConns(200)
+	db.SetMaxIdleConns(400)
+	db.SetConnMaxLifetime(time.Minute * 3)
+	handlers.PrepareTemplates("../templates/%s.html")
+	paths.SetupPaths("test")
 	return db
 }
 
