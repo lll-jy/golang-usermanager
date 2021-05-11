@@ -231,6 +231,16 @@ func test_valid_reset_name(t *testing.T, db *sql.DB, i int) {
 	}
 }
 
+func test_invalid_reset_duplicate(t *testing.T, db *sql.DB, i int) {
+	name := fmt.Sprintf("testuser%d", i)
+	newName := fmt.Sprintf("user%d", i)
+	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
+	header := resetExecute(t, db, name, pass, newName, pass)
+	if header["Status"][0] != "user already exists" {
+		t.Errorf("Wrongly allowed reset username to existing user")
+	}
+}
+
 func delete_execute(t *testing.T, db *sql.DB, name string, pass string) http.Header {
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{
@@ -455,10 +465,15 @@ func Test_handlers(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			test_valid_reset_name(t, db, i)
 		}
+		for i := 0; i < 5; i++ {
+			test_invalid_reset_duplicate(t, db, i)
+		}
 	})
 
 	t.Run("Upload", func(t *testing.T) {
-		test_upload(t, db, 0)
+		for i := 0; i < 5; i++ {
+			test_upload(t, db, i)
+		}
 	})
 }
 
