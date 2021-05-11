@@ -7,20 +7,6 @@ import (
 	"text/template"
 )
 
-/*var TemplateFileNameFormat = "templates/%s.html"
-var IndexTemplate = fmt.Sprintf(TemplateFileNameFormat, "index")
-var ViewTemplate = fmt.Sprintf(TemplateFileNameFormat, "view")
-var SignUpTemplate = fmt.Sprintf(TemplateFileNameFormat, "signup")
-var ProfileTemplate = fmt.Sprintf(TemplateFileNameFormat, "profile")
-
-// templates
-var templates = template.Must(template.ParseFiles(
-	IndexTemplate,
-	ViewTemplate,
-	SignUpTemplate,
-	ProfileTemplate,
-))*/
-
 // templates
 var templates *template.Template
 
