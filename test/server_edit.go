@@ -16,15 +16,19 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	nickname := fmt.Sprintf("nick%d", i)
 	nicknew := fmt.Sprintf("mick%d", i)
 	response, request := formSetup(fmt.Sprintf("nickname=%s", nicknew), t, db, "/edit")
+	user := &protocol.User{}
+	protocol.IsExistingUsername(db, name, user)
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{
 			Name:     name,
-			Password: pass,
+			Password: user.Password,
+			PhotoUrl: user.PhotoUrl,
 			Nickname: nickname,
 		},
 		&protocol.User{
 			Name:     name,
 			Password: pass,
+			PhotoUrl: user.PhotoUrl,
 			Nickname: nickname,
 		},
 		handlers.InfoErr{},
@@ -32,7 +36,6 @@ func test_valid_edit(t *testing.T, db *sql.DB, i int) {
 	)
 	updateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.EditHandler)).ServeHTTP(response, request)
-	user := &protocol.User{}
 	flag := protocol.IsExistingUsername(db, name, user)
 	if !flag {
 		t.Errorf("Wrongly deleted/updated primary key of %s.", name)

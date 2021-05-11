@@ -60,6 +60,12 @@ func Test_handlers(t *testing.T) {
 		}
 	})
 
+	t.Run("Upload", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			test_upload(t, db, i)
+		}
+	})
+
 	t.Run("Edit", func(t *testing.T) {
 		clearEffects(db)
 		for i := 0; i < 5; i++ {
@@ -76,14 +82,12 @@ func Test_handlers(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			test_valid_reset_name(t, db, i)
 		}
+		clearEffects(db)
+		for i := 0; i < 5; i++ {
+			test_valid_reset_pass_with_photo(t, db, i)
+		}
 		for i := 0; i < 5; i++ {
 			test_invalid_reset_duplicate(t, db, i)
-		}
-	})
-
-	t.Run("Upload", func(t *testing.T) {
-		for i := 0; i < 5; i++ {
-			test_upload(t, db, i)
 		}
 	})
 }

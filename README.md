@@ -6,18 +6,23 @@
 
 ## Run
 
-First check `entry-task/cmd/handlers/pageHandlers.go` has the variable `var TemplateFileNameFormat = "templates/%s.html"`.
-
-Then, in the `entry-task` directory, run `go run cmd/usermanager/*.go`.
+In the `entry-task` directory, run `go run cmd/usermanager/*.go`.
 
 ## Test
 
-First check `entry-task/cmd/handlers/pageHandlers.go` has the variable `var TemplateFileNameFormat = "../templates/%s.html"`. And check `entry-task/cmd/paths/paths.go`
-has the variable `var FileBasePath = "../../../../Desktop/EntryTask/entry-task/test/data/upload"`
+In the `entry-task` directory, run `go test test/*.go -parallel 1000`. If different test want to be run independently, use the following commands.
 
-Then, in the `entry-task` directory, run `go test test/*.go -parallel 1000`.
+### Validator Unit Testing
 
-If logs are wanted to be shown, run with `-v` tag.
+Run `go test test/validation_test.go`.
+
+### Handlers Unit Testing
+
+Run `go test test/server*.go`.
+
+### Massive Testing for Performance
+
+Run `go test`. 
 
 ## Extension
 

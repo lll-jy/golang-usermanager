@@ -13,6 +13,7 @@ import (
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -100,6 +101,7 @@ func areIdenticalFiles(file1 string, file2 string) bool {
 func clearEffects(db *sql.DB) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
 	for i := 0; i < 5; i++ {
-		handlers.ExecuteQuery(db, "UPDATE users SET photo = ?, nickname = ? WHERE username = ?", nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), 3)
+		handlers.ExecuteQuery(db, "UPDATE users SET password = ?, photo = ?, nickname = ? WHERE username = ?", hashed, nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
 	}
 }

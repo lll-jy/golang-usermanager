@@ -18,18 +18,20 @@ import (
 
 // login handler
 
-func decryptPhoto(url string, pass string, name string, photo *string) {
+func DecryptPhoto(url string, pass string, name string, photo *string) error {
 	if url == "" || url == paths.PlaceholderPath {
 		*photo = paths.PlaceholderPath
 	} else {
 		encrypted, err := ioutil.ReadFile(url)
 		if err != nil {
 			log.Printf("The encrypted file %s is invalid because %s.", url, err.Error())
+			return err
 		}
 		decrypted := decrypt(encrypted, pass)
 		*photo = fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
 		ioutil.WriteFile(*photo, decrypted, 0600)
 	}
+	return nil
 }
 
 func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -48,7 +50,7 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		if protocol.IsCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
 			u.Name = name
-			decryptPhoto(u.PhotoUrl, pass, name, &photo)
+			DecryptPhoto(u.PhotoUrl, pass, name, &photo)
 			tu.PhotoUrl = u.PhotoUrl
 			tu.Nickname = u.Nickname
 			redirectTarget = "/view"
@@ -135,7 +137,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 					}
 					log.Printf("The original file key is updated.")
 				}
-				decryptPhoto(u.PhotoUrl, pass, name, &info.Photo)
+				DecryptPhoto(u.PhotoUrl, pass, name, &info.Photo)
 				tu.Nickname = u.Nickname
 				redirectTarget = tgt
 				user, err := proto.Marshal(u)
@@ -238,7 +240,7 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
 			dirs := strings.Split(tempFile.Name(), "/")
 			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", paths.FileBaseRelativePath, dirs[len(dirs)-1]) // EXTEND: same as above
-			decryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
+			DecryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)
 			log.Println("Successfully uploaded file")
 			header.Set("photo", info.Photo)
@@ -257,7 +259,7 @@ func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if info.User.Password != "" {
 		if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 			os.Remove(info.Photo)
-			decryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
+			DecryptPhoto(info.User.PhotoUrl, info.TempUser.Password, info.User.Name, &info.Photo)
 			log.Printf("Temporary file removed.")
 		} else {
 			log.Printf("No file to remove.")

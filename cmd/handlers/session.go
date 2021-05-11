@@ -40,24 +40,7 @@ type PageInfo struct {
 	Photo        string
 }
 
-func GetPageInfo(r *http.Request) (info PageInfo) {
-	var user string
-	var tempUser string
-	var nameErr string
-	var passErr string
-	var repeatPassErr string
-	var photo string
-	if cookie, err := r.Cookie("session"); err == nil {
-		cookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
-			user = cookieValue["user"]
-			tempUser = cookieValue["temp"]
-			nameErr = cookieValue["nameErr"]
-			passErr = cookieValue["passErr"]
-			repeatPassErr = cookieValue["repeatPassErr"]
-			photo = cookieValue["photo"]
-		}
-	}
+func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo string) (info PageInfo) {
 	u := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(user), u); err != nil {
 		log.Printf("Error: wrong format! %s cannot be parsed as a user.", user)
@@ -77,6 +60,27 @@ func GetPageInfo(r *http.Request) (info PageInfo) {
 		InfoErr:  ie,
 		Photo:    photo,
 	}
+}
+
+func GetPageInfo(r *http.Request) (info PageInfo) {
+	var user string
+	var tempUser string
+	var nameErr string
+	var passErr string
+	var repeatPassErr string
+	var photo string
+	if cookie, err := r.Cookie("session"); err == nil {
+		cookieValue := make(map[string]string)
+		if err = cookieHandler.Decode("session", cookie.Value, &cookieValue); err == nil {
+			user = cookieValue["user"]
+			tempUser = cookieValue["temp"]
+			nameErr = cookieValue["nameErr"]
+			passErr = cookieValue["passErr"]
+			repeatPassErr = cookieValue["repeatPassErr"]
+			photo = cookieValue["photo"]
+		}
+	}
+	return generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo)
 }
 
 func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo string) string {
