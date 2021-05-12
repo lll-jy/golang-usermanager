@@ -32,7 +32,7 @@ func prepare(pass string) cipher.AEAD {
 	return gcm
 }
 
-// encrypt encrypts bytes given with password as key to resulting bytes
+// encrypt encrypts bytes given with password as key to resulting bytes.
 func encrypt(toEncrypt []byte, pass string) []byte {
 	gcm := prepare(pass)
 
@@ -43,7 +43,7 @@ func encrypt(toEncrypt []byte, pass string) []byte {
 	return gcm.Seal(nonce, nonce, toEncrypt, nil)
 }
 
-// decrypt decrypts bytes given with password as key to original bytes
+// decrypt decrypts bytes given with password as key to original bytes.
 func decrypt(encrypted []byte, pass string) []byte {
 	gcm := prepare(pass)
 	nonceSize := gcm.NonceSize()

@@ -9,7 +9,7 @@ import (
 )
 
 // Initialize setup the initial database data with 200 users with the following configuration:
-// username = user<i>, password = pass<i*2><i*2>, photo = nil, nickname = nick<i>
+// username = user<i>, password = pass<i*2><i*2>, photo = nil, nickname = nick<i>.
 func Initialize(db *sql.DB) {
 	err := ExecuteQuery(db, "DROP TABLE IF EXISTS users")
 	if err != nil {
@@ -40,7 +40,7 @@ func Initialize(db *sql.DB) {
 	}
 }
 
-// ExecuteQuery executes the given query (with ? at some places to replace with arguments) to run on db
+// ExecuteQuery executes the given query (with ? at some places to replace with arguments) to run on db.
 func ExecuteQuery(db *sql.DB, query string, args ...interface{}) error {
 	stmt, err := db.Prepare(query)
 	if err != nil {

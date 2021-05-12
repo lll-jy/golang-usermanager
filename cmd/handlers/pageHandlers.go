@@ -8,9 +8,10 @@ import (
 	"text/template"
 )
 
-// templates
+// templates that the web app uses
 var templates *template.Template
 
+// PrepareTemplates parses the template files and store in templates variable
 func PrepareTemplates(templateFileNameFormat string) {
 	templates = template.Must(template.ParseFiles(
 		fmt.Sprintf(templateFileNameFormat, "index"),
@@ -20,6 +21,7 @@ func PrepareTemplates(templateFileNameFormat string) {
 	))
 }
 
+// renderTemplate renders the template for given template with given info and write to the response writer
 func renderTemplate(w http.ResponseWriter, tmpl string, info *PageInfo) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", info)
 	if err != nil {
@@ -27,6 +29,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, info *PageInfo) {
 	}
 }
 
+// renderRestrictedTemplate renders the template with restricted access with given info.
 func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl string, fn func(*PageInfo)) {
 	info := GetPageInfo(r)
 	header := w.Header()
@@ -43,8 +46,6 @@ func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl strin
 	}
 }
 
-// index page
-
 func IndexPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	renderTemplate(w, "index", &info)
@@ -58,27 +59,19 @@ func SignupPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "signup", &info)
 }
 
-// view page
-
-func setDisplayName(info *PageInfo) {
-	if info.User.Nickname != "" {
-		info.DisplayName = info.User.Nickname
-	} else {
-		info.DisplayName = fmt.Sprintf("user %s", info.User.Name)
-	}
-}
-
 func ViewPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	renderRestrictedTemplate(w, r, "view", setDisplayName)
+	renderRestrictedTemplate(w, r, "view", func(info *PageInfo) {
+		if info.User.Nickname != "" {
+			info.DisplayName = info.User.Nickname
+		} else {
+			info.DisplayName = fmt.Sprintf("user %s", info.User.Name)
+		}
+	})
 }
-
-// edit page
 
 func EditPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderRestrictedTemplate(w, r, "profile", func(info *PageInfo) {})
 }
-
-// reset page
 
 func ResetPageHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	renderRestrictedTemplate(w, r, "signup", func(info *PageInfo) {

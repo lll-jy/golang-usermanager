@@ -20,7 +20,7 @@ import (
 )
 
 // DecryptPhoto decrypts photo at url with pass as key of the user of given username and copy it to a local
-// location with path stored at photo
+// location with path stored at photo.
 func DecryptPhoto(url string, pass string, name string, photo *string) error {
 	if url == "" || url == paths.PlaceholderPath {
 		*photo = paths.PlaceholderPath
