@@ -15,9 +15,9 @@ func SetupPaths(src string) {
 		break
 	case "test":
 		PlaceholderPath = "../assets/placeholder.jpeg"
-		FileBasePath = "../../../../Desktop/EntryTask/entry-task/test/data/upload"
-		FileBaseRelativePath = "data/upload"
-		TempPath = "data/temp"
+		FileBasePath = "../../../../Desktop/EntryTask/entry-task/test/data/test_upload"
+		FileBaseRelativePath = "data/test_upload"
+		TempPath = "data/test_temp"
 		break
 	}
 }

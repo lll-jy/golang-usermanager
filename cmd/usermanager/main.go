@@ -6,15 +6,12 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
-	"net/http"
-	"time"
-
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 )
 
 // server main method
@@ -43,7 +40,7 @@ func setHandleFunc(router *mux.Router) {
 	router.HandleFunc("/remove", makeHandler(handlers.RemoveHandler)).Methods("POST")
 }
 
-func tryConnection(db *sql.DB) {
+/*func tryConnection(db *sql.DB) {
 	retryCount := 30
 	for {
 		err := db.Ping()
@@ -59,11 +56,11 @@ func tryConnection(db *sql.DB) {
 			break
 		}
 	}
-}
+}*/
 
 func setDb() {
 	var err error
-	db, err = sql.Open("mysql", "root:@/entryTask")
+	db, err = sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/entryTask")
 	if err != nil {
 		log.Printf("Error connecting to database. %s", err.Error())
 	}
@@ -79,18 +76,18 @@ func makeHandler(fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Hand
 
 func main() {
 	setDb()
-	defer db.Close()
+	//tryConnection(db)
 	paths.SetupPaths("main")
-	//handlers.Initialize(db)
+	handlers.Initialize(db)
 
 	setHandleFunc(router)
 
 	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
 	staticFileDir := http.Dir("./")
-	//staticFileDir := http.Dir("/Users/jiayu.li/Desktop/EntryTask/entry-task/")
 	staticFileHandler := http.StripPrefix("/", http.FileServer(staticFileDir))
 	router.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
+	defer db.Close()
 }
