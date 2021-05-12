@@ -48,7 +48,7 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	redirectTarget := "/"
 	u := protocol.User{}
 	tu := createUser(name, pass)
-	ie := InfoErr{}
+	ie := &InfoErr{}
 	photo := ""
 	if protocol.IsExistingUsername(db, name, &u) {
 		log.Printf("User %s found.", name)
@@ -109,7 +109,7 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 	info := GetPageInfo(r)
 	u := info.User
 	tu := createUser(name, pass)
-	ie := InfoErr{}
+	ie := &InfoErr{}
 	if protocol.IsValidUsername(name) {
 		if protocol.IsExistingUsername(db, name, u) {
 			log.Printf("User signup failure: duplicate user %s found.", name)
