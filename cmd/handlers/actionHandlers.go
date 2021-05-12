@@ -293,7 +293,6 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
-		log.Printf("file is %s to %s", info.User.PhotoUrl, paths.PlaceholderPath)
 		if info.TempUser.PhotoUrl != "" && info.TempUser.PhotoUrl != paths.PlaceholderPath {
 			err := os.Remove(info.Photo)
 			if err != nil {
