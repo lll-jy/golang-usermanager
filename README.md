@@ -6,7 +6,9 @@
 
 ## Run
 
-In the `entry-task` directory, run `go run cmd/usermanager/*.go`.
+In the `entry-task` directory, run `go run cmd/usermanager/*.go`. Then, open a browser, e.g. Chrome, and
+direct to `http://localhost:8080/`, one should see the following page.
+![Index page](docs/screenshots/index.png)
 
 ## Test
 
@@ -21,7 +23,8 @@ First, also in the `entry-task` directory, start the server by
 `go run cmd/usermanager/*.go`.
 
 Run `go test test/l*.go -parallel 100` for 1000 login requests, and 
-`go test test/m*.go -parallel 100` for 1000 different request types. 
+`go test test/m*.go -parallel 100` for 1000 different request types.
+One can watch the terminal where server is running to see logs.
 
 ## Extension
 

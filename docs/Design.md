@@ -10,12 +10,21 @@ The app is a simple web application with the web app server connected to a datab
 
 1. A server socket port is started waiting for incoming connection requests.
 1. A client socket is created to connect to the server socket as connection socket.
-1. An HTTP request is sent from the client socket and read by the connection socket. Possible requests are seen in [API Design](#api-design) section. Socket programming as well as HTTP requests handling are written in GoLang.
-1. A database query checking authentification is first sent to the database to ask whether the user has the right to perform the desired action, which is in essence user login check. The database used is MySQL and github.com/go-sql-driver/mysql is used to integrate with GoLang.
-1. Successful login would allow the server to enter a session. The session is handled using github.com/gorilla/mux and github.com/gorilla/securecookie.
-1. The server continue to handle the database query made based on the requests and data is fetched from the database (to be elaborated separately below). Database queries are made based on the requests and data is fetched from the database (to be elaborated separately below). 
-    * In particular, the photo is fetched by the photo URL stored in the database, which is encrypted using the password of the user. When a user logs in, a temporary photo file is created after decryption to the local device and accessed by the web application server.
-1. The connection socket generates corresponding HTTP responses based on the results from database and send to the client socket.
+1. An HTTP request is sent from the client socket and read by the connection socket. Possible requests are seen in
+   [API Design](#api-design) section. Socket programming as well as HTTP requests handling are written in GoLang.
+1. A database query checking authentication is first sent to the database to ask whether the user has the right to 
+   perform the desired action, which is in essence user login check. The database used is MySQL and 
+   github.com/go-sql-driver/mysql is used to integrate with GoLang.
+1. Successful login would allow the server to enter a session. The session is handled using cookies with the go modules
+   github.com/gorilla/mux and github.com/gorilla/securecookie.
+1. The server continue to handle the database query made based on the requests and data is fetched from the database 
+   (to be elaborated separately below). Database queries are made based on the requests and data is fetched from the 
+   database (to be elaborated separately below). 
+    * In particular, the photo is fetched by the photo URL stored in the database, which is encrypted using the password 
+      of the user. When a user logs in, a temporary photo file is created after decryption to the local device and 
+      accessed by the web application server.
+1. The connection socket generates corresponding HTTP responses based on the results from database and send to the 
+   client socket.
 1. The client socket read the response from connection socket and report to the user.
 1. Repeat 3 to 8 to handle more requests from the user.
 1. Close the current client socket.
@@ -125,3 +134,31 @@ The nickname can be any UTF-8 string of no more than 30 characters.
 The dataflow is seen as follows.
 
 ![data flow](diagrams/data_flow.png)
+
+## Frameworks used
+
+| Framework | Usage |
+|-----------|-------|
+| `crypto/aes`, `crypto/cipher`, `crypto/rand` | file encryption and decryption framework |
+| `database/sql` | database helper framework |
+| `errors`, `fmt`, `io`, `io/ioutil`, `log`, `os`, `reflect`, `regexp`, `strings`, `sync`, `testing` | fundamental Go in-built functions |
+| `net/http` | handle HTTP clients, requests, etc. |
+| `github.com/go-sql-driver/mysql` | Go MySQL driver |
+| `github.com/gorilla/mux` | router framework |
+| `github.com/gorilla/securecookie` | cookie encoding and decoding framework |
+| `golang.org/x/crypto/bcrypt`  | password hashing and checking |
+| `google.golang.org/protobuf/proto`, `google.golang.org/protobuf/reflect/protoreflect`, `google.golang.org/protobuf/runtime/protoimpl`| protobuf framework |
+| `text/template` | HTML template parsing framework |
+
+## References
+
+1. GoLang API: https://golang.org (given reference)
+1. GoLang web app: 
+   1. Tutorial: https://golang.org/doc/articles/wiki/ (given reference)
+   1. Structure and assets file directory: https://www.sohamkamani.com/golang/how-to-build-a-web-application/
+1. Go MySQL driver: 
+   1. Source repository: https://github.com/go-sql-driver/mysql (given reference)
+   1. Examples: https://github.com/go-sql-driver/mysql/wiki/Examples
+1. Protobuf: https://developers.google.com/protocol-buffers (given reference)
+1. Cookie encoding and decoding for sessions: https://gist.github.com/mschoebel/9398202
+1. File encryption and decryption: https://www.melvinvivas.com/how-to-encrypt-and-decrypt-data-using-aes/
