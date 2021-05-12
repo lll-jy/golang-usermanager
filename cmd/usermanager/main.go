@@ -6,12 +6,14 @@ package main
 
 import (
 	"database/sql"
-	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
-	"git.garena.com/jiayu.li/entry-task/cmd/paths"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+
+	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 // server main method
