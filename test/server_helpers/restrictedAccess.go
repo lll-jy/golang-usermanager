@@ -14,8 +14,8 @@ import (
 func ExecuteRestrictedTemplate(t *testing.T, db *sql.DB, cookieString string, url string,
 	fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
 	response := httptest.NewRecorder()
-	request := makeRequest(http.MethodGet, url, t)
-	updateCookie(cookieString, response, request)
+	request := MakeRequest(http.MethodGet, url, t)
+	UpdateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, fn)).ServeHTTP(response, request)
 	header := response.Header()
 	return header

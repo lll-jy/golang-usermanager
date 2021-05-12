@@ -26,7 +26,7 @@ func makeHandler(db *sql.DB, fn func(*sql.DB, http.ResponseWriter, *http.Request
 	}
 }
 
-func makeRequest(method string, url string, t *testing.T) *http.Request {
+func MakeRequest(method string, url string, t *testing.T) *http.Request {
 	request, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		t.Errorf("Request failure :%v", err.Error())
@@ -67,7 +67,7 @@ func formSetup(body string, t *testing.T, db *sql.DB, url string) (*httptest.Res
 	return response, request
 }
 
-func updateCookie(cookieString string, response *httptest.ResponseRecorder, request *http.Request) {
+func UpdateCookie(cookieString string, response *httptest.ResponseRecorder, request *http.Request) {
 	cookie := &http.Cookie{
 		Name:  "session",
 		Value: cookieString,

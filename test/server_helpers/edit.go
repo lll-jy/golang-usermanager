@@ -11,8 +11,8 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 )
 
-func EditExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, nicknew string) (http.Header, *protocol.User) {
-	response, request := formSetup(fmt.Sprintf("nickname=%s", nicknew), t, db, "/edit")
+func EditExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, nickNew string) (http.Header, *protocol.User) {
+	response, request := formSetup(fmt.Sprintf("nickname=%s", nickNew), t, db, "/edit")
 	user := &protocol.User{}
 	protocol.IsExistingUsername(db, name, user)
 	cookieString := handlers.SetSessionInfo(
@@ -31,7 +31,7 @@ func EditExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, n
 		handlers.InfoErr{},
 		tempPhoto,
 	)
-	updateCookie(cookieString, response, request)
+	UpdateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.EditHandler)).ServeHTTP(response, request)
 	return response.Header(), user
 }

@@ -33,10 +33,12 @@ func Test_handlers(t *testing.T) {
 			server_helpers.ValidLogin(t, i, db)
 		}
 		for i := 0; i < 5; i++ {
-			server_helpers.InvalidLogin(t, fmt.Sprintf("name=user%d&password=pass%d", i, i), db, "incorrect password", fmt.Sprintf("Wrong password for user%d not detected correctly.", i))
+			server_helpers.InvalidLogin(t, fmt.Sprintf("name=user%d&password=pass%d", i, i), db,
+				"incorrect password", fmt.Sprintf("Wrong password for user%d not detected correctly.", i))
 		}
 		for i := 0; i < 5; i++ {
-			server_helpers.InvalidLogin(t, fmt.Sprintf("name=useruser%d&password=pass%d", i, i), db, "user not exist", fmt.Sprintf("Non-existing user useruser%d not detected correctly.", i))
+			server_helpers.InvalidLogin(t, fmt.Sprintf("name=useruser%d&password=pass%d", i, i), db,
+				"user not exist", fmt.Sprintf("Non-existing user useruser%d not detected correctly.", i))
 		}
 	})
 
@@ -46,13 +48,17 @@ func Test_handlers(t *testing.T) {
 			server_helpers.ValidSignup(t, db, i)
 		}
 		for i := 0; i < 5; i++ {
-			server_helpers.InvalidSignup(t, db, fmt.Sprintf("user%d", i), "pass", "pass", "user already exists", fmt.Sprintf("Failed to recognized existing user user%d", i))
+			server_helpers.InvalidSignup(t, db, fmt.Sprintf("user%d", i), "pass", "pass",
+				"user already exists", fmt.Sprintf("Failed to recognized existing user user%d", i))
 			name := fmt.Sprintf("testuser%d", 100+i)
 			pass := fmt.Sprintf("pass%d%d", 200+i, 200+i)
-			server_helpers.InvalidSignup(t, db, name, pass, fmt.Sprintf("pass%d", 200+i), "mismatch password", "Failed to detect password mismatch.")
-			wrong_pass := fmt.Sprintf("p%d", i)
-			server_helpers.InvalidSignup(t, db, name, wrong_pass, wrong_pass, "wrong password format", "Failed to detect wrong password format.")
-			server_helpers.InvalidSignup(t, db, fmt.Sprintf("testuser,%d", i), pass, pass, "wrong username format", "Failed to detect wrong username format.")
+			server_helpers.InvalidSignup(t, db, name, pass, fmt.Sprintf("pass%d", 200+i), "mismatch password",
+				"Failed to detect password mismatch.")
+			wrongPass := fmt.Sprintf("p%d", i)
+			server_helpers.InvalidSignup(t, db, name, wrongPass, wrongPass, "wrong password format",
+				"Failed to detect wrong password format.")
+			server_helpers.InvalidSignup(t, db, fmt.Sprintf("testuser,%d", i), pass, pass, "wrong username format",
+				"Failed to detect wrong username format.")
 		}
 	})
 

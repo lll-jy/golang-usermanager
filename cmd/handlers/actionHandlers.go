@@ -178,6 +178,7 @@ func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if info.User.Password != "" {
 		userInfoHandler(db, w, r, "/reset", "/view", "UPDATE users SET username = ?, password = ? WHERE username = ?")
 	} else {
+		log.Printf("Access denied. Redirect to homepage.")
 		http.Redirect(w, r, "/", 302)
 	}
 }
@@ -217,6 +218,7 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/view", 302)
 		}
 	} else {
+		log.Printf("Access denied. Redirect to homepage.")
 		http.Redirect(w, r, "/", 302)
 	}
 }
@@ -310,6 +312,7 @@ func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Set("status", "")
 	info := GetPageInfo(r)
+	log.Printf("Want to delete %s\n session is %v\ninfo is %v", info.User.Name, r.Header, info)
 	if info.User.Password != "" {
 		name := info.User.Name
 		query := "DELETE FROM users WHERE username = ?"
@@ -323,6 +326,7 @@ func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		}
 		removeFile(info.Photo, info.Photo)
 		removeFile(info.User.PhotoUrl, info.Photo)
+		log.Printf("User %s deleted.", name)
 		clearSession(w)
 	}
 	http.Redirect(w, r, "/", 302)

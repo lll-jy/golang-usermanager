@@ -68,7 +68,7 @@ func setDb() {
 		log.Printf("Error connecting to database. %s", err.Error())
 	}
 	db.SetMaxOpenConns(500)
-	db.SetMaxIdleConns(10)
+	db.SetMaxIdleConns(30)
 }
 
 func makeHandler(fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -87,6 +87,7 @@ func main() {
 
 	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
 	staticFileDir := http.Dir("./")
+	//staticFileDir := http.Dir("/Users/jiayu.li/Desktop/EntryTask/entry-task/")
 	staticFileHandler := http.StripPrefix("/", http.FileServer(staticFileDir))
 	router.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
 

@@ -50,7 +50,7 @@ func ResetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, ne
 		photo,
 	)
 	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", new_name, new_pass, new_pass), t, db, "/reset")
-	updateCookie(cookieString, response, request)
+	UpdateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.ResetHandler)).ServeHTTP(response, request)
 	return response.Header()
 }

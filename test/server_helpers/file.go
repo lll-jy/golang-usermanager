@@ -61,7 +61,7 @@ func Upload(t *testing.T, db *sql.DB, i int) string {
 		handlers.InfoErr{},
 		paths.PlaceholderPath,
 	)
-	updateCookie(cookieString, response, request)
+	UpdateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.UploadHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	photo := header["Tempphoto"][0]

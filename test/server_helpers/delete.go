@@ -22,8 +22,8 @@ func DeleteExecute(t *testing.T, db *sql.DB, name string, pass string) http.Head
 		"",
 	)
 	response := httptest.NewRecorder()
-	request := makeRequest(http.MethodPost, "/delete", t)
-	updateCookie(cookieString, response, request)
+	request := MakeRequest(http.MethodPost, "/delete", t)
+	UpdateCookie(cookieString, response, request)
 	http.HandlerFunc(makeHandler(db, handlers.DeleteHandler)).ServeHTTP(response, request)
 	return response.Header()
 }
