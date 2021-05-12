@@ -21,6 +21,6 @@ EXPOSE 8080
 
 CMD ["./usermanager"]
 
-
+# docker run --name=db -d mysql/mysql-server:latest
 # docker build --tag first  -f deployments/Dockerfile .
 # docker run -p 8080:8080 --name first -d first
