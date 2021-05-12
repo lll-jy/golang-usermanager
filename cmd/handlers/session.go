@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+
 	"github.com/gorilla/securecookie"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -18,17 +20,17 @@ func createUser(name string, pass string) protocol.User {
 	return protocol.User{
 		Name:     name,
 		Password: pass,
-		PhotoUrl: "",
-		Nickname: "",
 	}
 }
 
+// InfoErr keeps the error messages of the page.
 type InfoErr struct {
 	NameErr           string
 	PasswordErr       string
 	PasswordRepeatErr string
 }
 
+// PageInfo keeps all the information that cookie may need to know.
 type PageInfo struct {
 	User         *protocol.User
 	TempUser     *protocol.User
@@ -40,14 +42,15 @@ type PageInfo struct {
 	Photo        string
 }
 
-func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo string) (info PageInfo) {
+// generatePageInfo constructs the PageInfo type struct with given information.
+func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo string) PageInfo {
 	u := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(user), u); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user.", user)
+		log.Printf("Error: wrong format! %s cannot be parsed as a user: %s", user, err.Error())
 	}
 	tu := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(tempUser), tu); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user)", tempUser)
+		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user): %s", tempUser, err.Error())
 	}
 	ie := InfoErr{
 		NameErr:           nameErr,
@@ -62,7 +65,8 @@ func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo str
 	}
 }
 
-func GetPageInfo(r *http.Request) (info PageInfo) {
+// GetPageInfo constructs the PageInfo struct passed in the cookie of given request.
+func GetPageInfo(r *http.Request) PageInfo {
 	var user string
 	var tempUser string
 	var nameErr string
@@ -83,6 +87,7 @@ func GetPageInfo(r *http.Request) (info PageInfo) {
 	return generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo)
 }
 
+// SetSessionInfo generates the cookie encoded string with the given information.
 func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo string) string {
 	user, err := proto.Marshal(u)
 	if err != nil {
@@ -108,6 +113,7 @@ func SetSessionInfo(u *protocol.User, tu *protocol.User, ie InfoErr, photo strin
 	}
 }
 
+// setSession updates the cookie of the writer with the given information.
 func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w http.ResponseWriter) {
 	cookie := &http.Cookie{
 		Name:  "session",
@@ -117,6 +123,7 @@ func setSession(u *protocol.User, tu *protocol.User, ie InfoErr, photo string, w
 	http.SetCookie(w, cookie)
 }
 
+// clearSession clears session cookies.
 func clearSession(w http.ResponseWriter) {
 	cookie := &http.Cookie{
 		Name:   "session",
