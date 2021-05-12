@@ -54,3 +54,7 @@ func Test_mixedRequests(t *testing.T) {
 		})
 	}
 }
+
+// command for generating profile
+// go test test/l*.go -parallel 100 -cpuprofile test/profiles/login_cpu.prof -memprofile test/profiles/login_mem.prof -bench .
+// go tool pprof test/profiles/...prof

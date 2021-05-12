@@ -151,6 +151,76 @@ However, when the number of parallel test cases is too large (larger than about 
 failure in connection to the database. The database may not be able to run stably when there are too many connections. 
 Nevertheless, the performance is already satisfiable.
 
+#### Profile
+
+##### CPU profile
+
+A sample run of the test cases gives the following profile data.
+
+![Login CPU profile](diagrams/pprof_mem_login.jpg)
+
+The top 10 samples (out of 188) in the profile are shown as follows.
+
+      flat  flat%   sum%        cum   cum%
+     260ms 26.00% 26.00%      270ms 27.00%  syscall.syscall
+     110ms 11.00% 37.00%      110ms 11.00%  runtime.pthread_cond_signal
+     110ms 11.00% 48.00%      110ms 11.00%  syscall.rawSyscall
+     100ms 10.00% 58.00%      100ms 10.00%  runtime.kevent
+      60ms  6.00% 64.00%       60ms  6.00%  runtime.nanotime1
+      50ms  5.00% 69.00%       50ms  5.00%  runtime.cgocall
+      40ms  4.00% 73.00%       40ms  4.00%  runtime.pthread_cond_wait
+      30ms  3.00% 76.00%      250ms 25.00%  net.sysSocket
+      20ms  2.00% 78.00%       20ms  2.00%  runtime.memclrNoHeapPointers
+      20ms  2.00% 80.00%       40ms  4.00%  runtime.netpollopen
+
+The top 10 samples of cumulative space are shown as follows.
+
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      370ms 37.00%  net.(*sysDialer).dialParallel.func1
+         0     0%     0%      370ms 37.00%  net.(*sysDialer).dialSerial
+         0     0%     0%      360ms 36.00%  net.(*sysDialer).dialSingle
+         0     0%     0%      350ms 35.00%  net.(*sysDialer).dialTCP
+         0     0%     0%      350ms 35.00%  net.(*sysDialer).doDialTCP
+         0     0%     0%      350ms 35.00%  net.internetSocket
+         0     0%     0%      350ms 35.00%  net.socket
+     260ms 26.00% 26.00%      270ms 27.00%  syscall.syscall
+      30ms  3.00% 29.00%      250ms 25.00%  net.sysSocket
+         0     0% 29.00%      210ms 21.00%  runtime.findrunnable
+
+##### Mem profile
+
+A sample run of the test cases gives the following profile data.
+
+![Login mem profile](diagrams/pprof_mem_login.jpg)
+
+The top 10 samples (out of 89) in the profile are shown as follows.
+
+          flat  flat%   sum%        cum   cum%
+     7196.04kB 27.67% 27.67%  7196.04kB 27.67%  bufio.NewReaderSize
+     2560.95kB  9.85% 37.52%  2560.95kB  9.85%  net/textproto.(*Reader).ReadMIMEHeader
+     1762.94kB  6.78% 44.30%  1762.94kB  6.78%  runtime/pprof.StartCPUProfile
+     1536.59kB  5.91% 50.21%  2052.60kB  7.89%  testing.(*T).Run
+     1024.12kB  3.94% 54.15%  2048.23kB  7.88%  net.(*Dialer).DialContext
+     1024.09kB  3.94% 58.09%  1024.09kB  3.94%  context.(*cancelCtx).Done
+      650.62kB  2.50% 60.59%   650.62kB  2.50%  compress/flate.(*compressor).init
+      516.01kB  1.98% 62.58%   516.01kB  1.98%  testing.(*matcher).unique
+         514kB  1.98% 64.55%      514kB  1.98%  bufio.NewWriterSize
+      512.50kB  1.97% 66.52%   512.50kB  1.97%  sync.(*Pool).pinSlow
+
+The top 10 samples of cumulative space are shown as follows.
+
+          flat  flat%   sum%        cum   cum%
+             0     0%     0% 10268.33kB 39.49%  net/http.(*Transport).dialConnFor
+      512.02kB  1.97%  1.97%  9756.29kB 37.52%  net/http.(*Transport).dialConn
+     7196.04kB 27.67% 29.64%  7196.04kB 27.67%  bufio.NewReaderSize (inline)
+             0     0% 29.64%  5637.17kB 21.68%  testing.tRunner
+             0     0% 29.64%  3584.56kB 13.79%  command-line-arguments.Test_loginRequests.func1
+             0     0% 29.64%  3073.02kB 11.82%  net/http.(*persistConn).readLoop
+             0     0% 29.64%  3073.02kB 11.82%  net/http.(*persistConn).readResponse
+      512.07kB  1.97% 31.61%  3073.02kB 11.82%  net/http.ReadResponse
+             0     0% 31.61%  3072.52kB 11.82%  net/http.(*Client).Post
+             0     0% 31.61%  3072.52kB 11.82%  net/http.(*Client).PostForm
+
 ### Mixed Type of Requests
 
 #### Test case design
@@ -183,11 +253,13 @@ allowed to run in parallel.
 
 #### Profile
 
+##### CPU profile
+
 A sample run of the test cases gives the following profile data.
 
-![Mixed web](diagrams/pprof_mixed.jpg)
+![Mixed CPU profile](diagrams/pprof_cpu_mixed.jpg)
 
-The top 10 samples (out of 180) in the profile are
+The top 10 samples (out of 180) in the profile are shown as follows.
 
       flat  flat%   sum%        cum   cum%
      250ms 26.88% 26.88%      250ms 26.88%  syscall.syscall
@@ -200,3 +272,51 @@ The top 10 samples (out of 180) in the profile are
       30ms  3.23% 79.57%       30ms  3.23%  runtime.nanotime1
       20ms  2.15% 81.72%       20ms  2.15%  runtime.(*spanSet).push
       20ms  2.15% 83.87%       20ms  2.15%  runtime.getStackMap
+
+The top 10 samples of cumulative time are shown as follows.
+
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      340ms 36.56%  net.(*sysDialer).dialParallel.func1
+         0     0%     0%      340ms 36.56%  net.(*sysDialer).dialSerial
+         0     0%     0%      330ms 35.48%  net.(*sysDialer).dialSingle
+         0     0%     0%      330ms 35.48%  net.(*sysDialer).dialTCP
+         0     0%     0%      330ms 35.48%  net.(*sysDialer).doDialTCP
+         0     0%     0%      310ms 33.33%  net.internetSocket
+         0     0%     0%      300ms 32.26%  net.socket
+     250ms 26.88% 26.88%      250ms 26.88%  syscall.syscall
+         0     0% 26.88%      190ms 20.43%  net.sysSocket
+         0     0% 26.88%      190ms 20.43%  runtime.findrunnable
+
+##### Mem profile
+
+A sample run of the test cases gives the following profile data.
+
+![Mixed mem profile](diagrams/pprof_cpu_mixed.jpg)
+
+The top 10 samples (out of 71) in the profile are shown as follows.
+
+          flat  flat%   sum%        cum   cum%
+     5140.03kB 23.14% 23.14%  5140.03kB 23.14%  bufio.NewReaderSize
+     2570.01kB 11.57% 34.72%  2570.01kB 11.57%  bufio.NewWriterSize
+     2048.34kB  9.22% 43.94%  2048.34kB  9.22%  net/textproto.(*Reader).ReadMIMEHeader
+     1184.27kB  5.33% 49.27%  1184.27kB  5.33%  runtime/pprof.StartCPUProfile
+     1024.34kB  4.61% 53.89%  1024.34kB  4.61%  net/textproto.MIMEHeader.Set
+      512.20kB  2.31% 56.19%  1024.22kB  4.61%  testing.(*T).Run
+      512.19kB  2.31% 58.50%   512.19kB  2.31%  runtime.malg
+      512.17kB  2.31% 60.80%   512.17kB  2.31%  net/http.(*Client).makeHeadersCopier.func1
+      512.17kB  2.31% 63.11%   512.17kB  2.31%  net/http.Header.Clone
+      512.09kB  2.31% 65.42%   512.09kB  2.31%  net/http/cookiejar.(*Jar).cookies
+
+The top 10 samples of cumulative space are shown as follows.
+    
+          flat  flat%   sum%        cum   cum%
+      512.05kB  2.31%  2.31% 10782.24kB 48.55%  net/http.(*Transport).dialConn
+             0     0%  2.31% 10782.24kB 48.55%  net/http.(*Transport).dialConnFor
+             0     0%  2.31%  5633.16kB 25.37%  testing.tRunner
+     5140.03kB 23.14% 25.45%  5140.03kB 23.14%  bufio.NewReaderSize (inline)
+             0     0% 25.45%  4608.94kB 20.75%  net/http.(*Client).Post
+             0     0% 25.45%  4608.94kB 20.75%  net/http.(*Client).PostForm
+             0     0% 25.45%  4096.87kB 18.45%  net/http.(*Client).Do (inline)
+      512.02kB  2.31% 27.76%  4096.87kB 18.45%  net/http.(*Client).do
+     2570.01kB 11.57% 39.33%  2570.01kB 11.57%  bufio.NewWriterSize (inline)
+             0     0% 39.33%  2560.62kB 11.53%  command-line-arguments.Test_mixedRequests.func2
