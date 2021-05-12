@@ -173,3 +173,6 @@ The dataflow is seen as follows.
 1. Protobuf: https://developers.google.com/protocol-buffers (given reference)
 1. Cookie encoding and decoding for sessions: https://gist.github.com/mschoebel/9398202
 1. File encryption and decryption: https://www.melvinvivas.com/how-to-encrypt-and-decrypt-data-using-aes/
+1. Go Profiling:
+   1. Introduction: https://blog.golang.org/pprof (given reference)
+   1. Tutorial: https://code.tutsplus.com/tutorials/make-your-go-programs-lightning-fast-with-profiling--cms-29809

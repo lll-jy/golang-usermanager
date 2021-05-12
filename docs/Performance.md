@@ -7,8 +7,10 @@
     1. [Signup Page](#signup-page)
     1. [View Page](#view-page)
     1. [Reset Page](#reset-page)
-1. [Request handling speed](#request-handling-speed)
-    1. [Login requests](#login-requests)
+1. [Request Handling Speed](#request-handling-speed)
+    1. [Environment](#environment)
+    1. [Login Requests](#login-requests)
+    1. [Mixed Type of Requests](#mixed-type-of-requests)
 
 ---------
 
@@ -111,14 +113,16 @@ reset page shares the same template with signup, and their behaviors are similar
 A note to mention is that when password is updated, the photo in the file base is updated accordingly so that it is 
 encrypted using the new password.
 
-## Request handling speed
+## Request Handling Speed
 
 ### Environment
 
 The test cases are run with a server running by `go run` command from command line. Before the test cases, the database
 already contains 200 unique users. No goroutine is used in original code and test code.
 
-### Login requests
+The test cases are run on macOS.
+
+### Login Requests
 
 #### Test case design
 
@@ -147,6 +151,52 @@ However, when the number of parallel test cases is too large (larger than about 
 failure in connection to the database. The database may not be able to run stably when there are too many connections. 
 Nevertheless, the performance is already satisfiable.
 
-### Mixed type of requests
+### Mixed Type of Requests
 
 #### Test case design
+
+As mentioned in [Introduction of Product and Implementation](#introduction), it is hard to implement all kinds of 
+requests simultaneously. Some tests need to be run after certain tests (in particular, requests of user-specific actions 
+need to be made after login/signup request.) Hence, the 1000 mixed-type requests chosen can never be executed 
+simultaneously.
+
+There are 2 main groups of test cases chosen, each group can be run independently (and hence concurrently). However, 
+requests in the same group are run in order.
+
+1. Group 1
+    1. Login to existing user (`POST /login`), invokes a `SELECT` query.
+    1. View this user after successful login (`GET /view`), invokes no query (use cookie results from login).
+    1. Edit this user after successful login (`POST /edit`), invokes an `UPDATE` query.
+1. Group 2
+    1. Signup test user (`POST /signup`), invokes a `SELECT` (check duplicates) and an `INSERT` query.
+    1. Delete test user after successful signup (`POST /delete`) invokes a `DELETE` query.
+
+All requests are scenarios of success (for example, successful login, successful signup, etc.), as successful scenarios 
+do not skip any time-consuming steps for each request.
+
+#### Performance
+
+Since requests are grouped, running with `-parallel 1` does not seem to provide other useful information, so the results
+are not shown here. The time for `-parallel 10` is about 1.37±0.12 s, and time for `-parallel 100` is about 0.79±0.08 s.
+Hence, it also fulfills the requirement for 1000 requests within a second when about 100 test cases (requests) are 
+allowed to run in parallel.
+
+#### Profile
+
+A sample run of the test cases gives the following profile data.
+
+![Mixed web](diagrams/pprof_mixed.jpg)
+
+The top 10 samples (out of 180) in the profile are
+
+      flat  flat%   sum%        cum   cum%
+     250ms 26.88% 26.88%      250ms 26.88%  syscall.syscall
+     110ms 11.83% 38.71%      110ms 11.83%  syscall.rawSyscall
+      80ms  8.60% 47.31%       80ms  8.60%  runtime.kevent
+      80ms  8.60% 55.91%       80ms  8.60%  runtime.pthread_cond_wait
+      70ms  7.53% 63.44%       70ms  7.53%  runtime.cgocall
+      70ms  7.53% 70.97%       70ms  7.53%  runtime.pthread_cond_signal
+      50ms  5.38% 76.34%       50ms  5.38%  syscall.syscall6
+      30ms  3.23% 79.57%       30ms  3.23%  runtime.nanotime1
+      20ms  2.15% 81.72%       20ms  2.15%  runtime.(*spanSet).push
+      20ms  2.15% 83.87%       20ms  2.15%  runtime.getStackMap
