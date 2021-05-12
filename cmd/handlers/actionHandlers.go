@@ -75,7 +75,7 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		header.Set("status", "user not exist")
 	}
 	setSession(&u, &tu, ie, photo, w)
-	go http.Redirect(w, r, redirectTarget, 302)
+	http.Redirect(w, r, redirectTarget, 302)
 }
 
 // logout handler

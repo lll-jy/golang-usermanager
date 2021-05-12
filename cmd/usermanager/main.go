@@ -67,7 +67,7 @@ func setDb() {
 	if err != nil {
 		log.Printf("Error connecting to database. %s", err.Error())
 	}
-	db.SetMaxOpenConns(200)
+	db.SetMaxOpenConns(500)
 	db.SetMaxIdleConns(10)
 }
 
@@ -80,6 +80,8 @@ func makeHandler(fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Hand
 func main() {
 	setDb()
 	defer db.Close()
+	paths.SetupPaths("main")
+	//handlers.Initialize(db)
 
 	setHandleFunc(router)
 
