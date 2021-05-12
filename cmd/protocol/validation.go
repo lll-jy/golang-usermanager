@@ -1,3 +1,4 @@
+// Package protocol handles helper functions concerning user data structure.
 package protocol
 
 import (
@@ -10,18 +11,20 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 )
 
+// IsValidUsername checks whether a given username start with letter, at least 4 characters, at most 20 characters,
+// string with alphanumerical or '-' or '_'.
 func IsValidUsername(username string) bool {
 	var validUsername = regexp.MustCompile("^[a-zA-Z](([a-zA-Z0-9]|-|_){3})(([a-zA-Z0-9]|-|_){0,16})$")
-	// start with letter, at least 4 characters, at most 20 characters, string with alphanumerical or '-' or '_'
 	return validUsername.MatchString(username)
 }
 
+// IsValidPassword checks whether a given password is between 4-20 characters.
 func IsValidPassword(password string) bool {
-	// 4-20 characters, case sensitive
 	length := len(password)
 	return length <= 20 && length >= 4
 }
 
+// ConvertToString converts a given interface read from database to a string.
 func ConvertToString(i interface{}) string {
 	s := fmt.Sprintf("%s", i)
 	if s == "%!s(<nil>)" {
@@ -30,6 +33,7 @@ func ConvertToString(i interface{}) string {
 	return s
 }
 
+// IsExistingUsername checks whether the given username has duplicate in the database.
 func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
 	if err != nil {
@@ -52,6 +56,7 @@ func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	}
 }
 
+// IsCorrectPassword checks whether the password user provides hashes to the password stored in the database.
 func IsCorrectPassword(userPass string, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(password), []byte(userPass)) == nil
 }

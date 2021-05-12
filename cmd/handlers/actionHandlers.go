@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,8 +16,6 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 
 	"google.golang.org/protobuf/proto"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 // DecryptPhoto decrypts photo at url with pass as key of the user of given username and copy it to a local

@@ -3,9 +3,8 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"log"
-
 	"golang.org/x/crypto/bcrypt"
+	"log"
 )
 
 // Initialize setup the initial database data with 200 users with the following configuration:
