@@ -1,5 +1,16 @@
 # Design
 
+## Table of Content
+### [Architecture/Structure](#architecturestructure)
+### [Strategies & Algorithms](#strategies-&-algorithms)
+### [API Design](#api-design)
+### [Data Schema Design](#data-schema-design)
+### [Data Flow](#data-flow)
+### [Frameworks Used](#frameworks-used)
+### [References](#references)
+
+-----
+
 ## Architecture/Structure
 
 The app is a simple web application with the web app server connected to a database (see Figure below). HTTP requests are sent by the clients to the server and handled as queries to database. The web app server gets data from the database and send the information as HTTP response back to the client.
@@ -135,7 +146,7 @@ The dataflow is seen as follows.
 
 ![data flow](diagrams/data_flow.png)
 
-## Frameworks used
+## Frameworks Used
 
 | Framework | Usage |
 |-----------|-------|
