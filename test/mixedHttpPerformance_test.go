@@ -2,28 +2,17 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/cookiejar"
+	"git.garena.com/jiayu.li/entry-task/test/server_helpers"
 	"net/url"
 	"testing"
 )
-
-func prepareClient(t *testing.T) *http.Client {
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		t.Errorf("Cannot creat cookie jar.")
-	}
-	return &http.Client{
-		Jar: jar,
-	}
-}
 
 func Test_mixedRequests(t *testing.T) {
 	for i := 0; i < 200; i++ {
 		i := i
 		t.Run(fmt.Sprintf("Login, view, and edit user%d", i), func(t *testing.T) {
 			t.Parallel()
-			client := prepareClient(t)
+			client := server_helpers.PrepareClient(t)
 			resp, err := client.PostForm("http://localhost:8080/login", url.Values{
 				"name": {fmt.Sprintf("user%d", i)},
 				"password": {fmt.Sprintf("pass%d%d", i * 2, i * 2)},
@@ -47,7 +36,7 @@ func Test_mixedRequests(t *testing.T) {
 		})
 		t.Run(fmt.Sprintf("Signup, delete testuser%d", i), func(t *testing.T) {
 			t.Parallel()
-			client := prepareClient(t)
+			client := server_helpers.PrepareClient(t)
 			resp, err := client.PostForm("http://localhost:8080/signup", url.Values{
 				"name": {fmt.Sprintf("testuser%d", i)},
 				"password": {fmt.Sprintf("testpass%d%d", i * 2, i * 2)},

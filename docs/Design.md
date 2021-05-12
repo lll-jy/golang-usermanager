@@ -1,13 +1,13 @@
 # Design
 
 ## Table of Content
-### [Architecture/Structure](#architecturestructure)
-### [Strategies & Algorithms](#strategies-&-algorithms)
-### [API Design](#api-design)
-### [Data Schema Design](#data-schema-design)
-### [Data Flow](#data-flow)
-### [Frameworks Used](#frameworks-used)
-### [References](#references)
+1. [Architecture/Structure](#architecturestructure)
+1. [Strategies & Algorithms](#strategies-&-algorithms)
+1. [API Design](#api-design)
+1. [Data Schema Design](#data-schema-design)
+1. [Data Flow](#data-flow)
+1. [Frameworks Used](#frameworks-used)
+1. [References](#references)
 
 -----
 

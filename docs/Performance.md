@@ -1,13 +1,14 @@
 # Performance
 
 ## Table of Content
-### [Product and Implementation](#product-and-implementation)
-#### [Introduction](#introduction)
-#### [Index Page](#index-page)
-#### [Signup Page](#signup-page)
-#### [View Page](#view-page)
-#### [Reset Page](#reset-page)
-
+1. [Product and Implementation](#product-and-implementation)
+    1. [Introduction](#introduction)
+    1. [Index Page](#index-page)
+    1. [Signup Page](#signup-page)
+    1. [View Page](#view-page)
+    1. [Reset Page](#reset-page)
+1. [Request handling speed](#request-handling-speed)
+    1. [Login requests](#login-requests)
 
 ---------
 
@@ -110,4 +111,42 @@ reset page shares the same template with signup, and their behaviors are similar
 A note to mention is that when password is updated, the photo in the file base is updated accordingly so that it is 
 encrypted using the new password.
 
-## Test cases
+## Request handling speed
+
+### Environment
+
+The test cases are run with a server running by `go run` command from command line. Before the test cases, the database
+already contains 200 unique users. No goroutine is used in original code and test code.
+
+### Login requests
+
+#### Test case design
+
+The test cases for login requests are 1000 requests of 200 unique users, 5 for each user, with correct password.
+
+Only successful login requests are used for the test because this is the case with the longest expected time. The most 
+time-consuming procedures for login requests are retrieving user information from the database and hashing password, 
+compared to which other parts of the program takes negligible time. Successful login requests need to go through both 
+the time-consuming steps, so they are chosen for testing. In particular, retrieving information from the database is 
+executed by every login requests, which takes noticeably less time than password hashing, which happens only for cases 
+that the username is found in the database.
+
+#### Performance
+
+When running the tests without parallel testing (i.e. running with flag `-parallel 1`), the time taken for 1000 requests
+are mostly in the range of 3.35-3.70 s, with the average time 3.571 s. Hence, it may be inferred that each 
+request is handled using about 3.5±2 ms.
+
+The general range for running the tests with `-parallel 10` is about 1.02±0.07 s, and running with `-parallel 100` is 
+0.93±0.08 s. When the number of parallel tests running simultaneously is greater than 10, the change in performance is 
+insignificant. This would mean that including the time for test cases setup, the time required to run the 1000 requests
+approaches to some time duration slightly below 1 s (around 0.93 s), which meets the requirement for 1000 login requests
+per second.
+
+However, when the number of parallel test cases is too large (larger than about 200), some test cases would fail due to 
+failure in connection to the database. The database may not be able to run stably when there are too many connections. 
+Nevertheless, the performance is already satisfiable.
+
+### Mixed type of requests
+
+#### Test case design

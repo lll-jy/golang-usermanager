@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
 	"strings"
@@ -103,5 +104,15 @@ func ClearEffects(db *sql.DB) {
 	for i := 0; i < 5; i++ {
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), bcrypt.MinCost)
 		handlers.ExecuteQuery(db, "UPDATE users SET password = ?, photo = ?, nickname = ? WHERE username = ?", hashed, nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
+	}
+}
+
+func PrepareClient(t *testing.T) *http.Client {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Errorf("Cannot creat cookie jar.")
+	}
+	return &http.Client{
+		Jar: jar,
 	}
 }
