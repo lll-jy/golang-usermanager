@@ -312,7 +312,6 @@ func DeleteHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Set("status", "")
 	info := GetPageInfo(r)
-	log.Printf("Want to delete %s\n session is %v\ninfo is %v", info.User.Name, r.Header, info)
 	if info.User.Password != "" {
 		name := info.User.Name
 		query := "DELETE FROM users WHERE username = ?"
