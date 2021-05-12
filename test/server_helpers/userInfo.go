@@ -13,7 +13,8 @@ import (
 
 func SignupExecute(t *testing.T, db *sql.DB, name string, pass string) http.Header {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
-	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, pass), t, db, "/signup")
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, pass),
+		t, db, "/signup")
 	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	return response.Header()
 }
@@ -27,7 +28,8 @@ func ValidSignup(t *testing.T, db *sql.DB, i int) {
 }
 
 func InvalidSignup(t *testing.T, db *sql.DB, name string, pass string, repeat string, status string, errString string) {
-	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat), t, db, "/signup")
+	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", name, pass, repeat),
+		t, db, "/signup")
 	http.HandlerFunc(makeHandler(db, handlers.SignupHandler)).ServeHTTP(response, request)
 	header := response.Header()
 	if header["Status"][0] != status {
@@ -35,7 +37,7 @@ func InvalidSignup(t *testing.T, db *sql.DB, name string, pass string, repeat st
 	}
 }
 
-func ResetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, new_name string, new_pass string, photo string) http.Header {
+func resetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, new_name string, new_pass string, photo string) http.Header {
 	SignupExecute(t, db, old_name, old_pass)
 	user := &protocol.User{}
 	protocol.IsExistingUsername(db, old_name, user)
@@ -46,7 +48,7 @@ func ResetExecute(t *testing.T, db *sql.DB, old_name string, old_pass string, ne
 			Name:     old_name,
 			Password: old_pass,
 		},
-		handlers.InfoErr{},
+		&handlers.InfoErr{},
 		photo,
 	)
 	response, request := formSetup(fmt.Sprintf("name=%s&password=%s&password_repeat=%s", new_name, new_pass, new_pass), t, db, "/reset")
@@ -59,7 +61,7 @@ func ValidResetPass(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("testuser%d", i)
 	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
 	newPass := fmt.Sprintf("testnewpass%d%d", i*2, i*2)
-	header := ResetExecute(t, db, name, pass, name, newPass, paths.PlaceholderPath)
+	header := resetExecute(t, db, name, pass, name, newPass, paths.PlaceholderPath)
 	user := getUser(header)
 	if header["Status"][0] != "successful signup" {
 		t.Errorf("Failed to reset password for %s due to %s.", name, header["Status"][0])
@@ -82,7 +84,7 @@ func ValidResetPassWithPhoto(t *testing.T, db *sql.DB, i int) {
 	newPass := fmt.Sprintf("newpass%d%d", i*2, i*2)
 	tempPhoto := fmt.Sprintf("%s/useruser%d.jpeg", paths.TempPath, i)
 	photo := ValidEditPhoto(t, db, i)
-	header := ResetExecute(t, db, name, pass, name, newPass, tempPhoto)
+	header := resetExecute(t, db, name, pass, name, newPass, tempPhoto)
 	user := getUser(header)
 	if header["Status"][0] != "successful signup" {
 		t.Errorf("Failed to reset password for %s due to %s.", name, header["Status"][0])
@@ -115,7 +117,7 @@ func ValidResetName(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("testuser%d", i)
 	newName := fmt.Sprintf("testnewuser%d", i)
 	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
-	header := ResetExecute(t, db, name, pass, newName, pass, paths.PlaceholderPath)
+	header := resetExecute(t, db, name, pass, newName, pass, paths.PlaceholderPath)
 	user := getUser(header)
 	if header["Status"][0] != "successful signup" {
 		t.Errorf("Failed to reset username for %s to %s.", name, newName)
@@ -136,7 +138,7 @@ func InvalidResetDuplicate(t *testing.T, db *sql.DB, i int) {
 	name := fmt.Sprintf("testuser%d", i)
 	newName := fmt.Sprintf("user%d", i)
 	pass := fmt.Sprintf("testpass%d%d", i*2, i*2)
-	header := ResetExecute(t, db, name, pass, newName, pass, paths.PlaceholderPath)
+	header := resetExecute(t, db, name, pass, newName, pass, paths.PlaceholderPath)
 	if header["Status"][0] != "user already exists" {
 		t.Errorf("Wrongly allowed reset username to existing user")
 	}

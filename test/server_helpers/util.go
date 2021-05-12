@@ -5,19 +5,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"git.garena.com/jiayu.li/entry-task/cmd/paths"
+	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
+	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
+	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
-	"time"
-
-	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
-	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
-	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/protobuf/proto"
 )
 
 func makeHandler(db *sql.DB, fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -38,16 +35,6 @@ func SetupDb(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Errorf("Database connection failed: %v", err.Error())
 	}
-	return db
-}
-
-func Setup(t *testing.T) *sql.DB {
-	db := SetupDb(t)
-	db.SetMaxOpenConns(200)
-	db.SetMaxIdleConns(400)
-	db.SetConnMaxLifetime(time.Minute * 3)
-	handlers.PrepareTemplates("../templates/%s.html")
-	paths.SetupPaths("test")
 	return db
 }
 

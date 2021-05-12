@@ -58,7 +58,7 @@ func Upload(t *testing.T, db *sql.DB, i int) string {
 			Password: pass,
 			Nickname: nickname,
 		},
-		handlers.InfoErr{},
+		&handlers.InfoErr{},
 		paths.PlaceholderPath,
 	)
 	UpdateCookie(cookieString, response, request)

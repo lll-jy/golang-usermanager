@@ -11,7 +11,7 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 )
 
-func ExecuteRestrictedTemplate(t *testing.T, db *sql.DB, cookieString string, url string,
+func executeRestrictedTemplate(t *testing.T, db *sql.DB, cookieString string, url string,
 	fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Header {
 	response := httptest.NewRecorder()
 	request := MakeRequest(http.MethodGet, url, t)
@@ -29,10 +29,10 @@ func ExecuteRestrictedTemplateWithCookie(t *testing.T, db *sql.DB, i int, url st
 			Password: fmt.Sprintf("pass%d%d", i*2, i*2),
 		},
 		&protocol.User{},
-		handlers.InfoErr{},
+		&handlers.InfoErr{},
 		"",
 	)
-	return ExecuteRestrictedTemplate(t, db, cookieString, url, fn)
+	return executeRestrictedTemplate(t, db, cookieString, url, fn)
 }
 
 func GrantedRestrictedTemplate(t *testing.T, db *sql.DB, i int, url string,
@@ -48,10 +48,10 @@ func DeniedRestrictedTemplate(t *testing.T, db *sql.DB, url string,
 	cookieString := handlers.SetSessionInfo(
 		&protocol.User{},
 		&protocol.User{},
-		handlers.InfoErr{},
+		&handlers.InfoErr{},
 		"",
 	)
-	header := ExecuteRestrictedTemplate(t, db, cookieString, url, fn)
+	header := executeRestrictedTemplate(t, db, cookieString, url, fn)
 	if header["Status"][0] != "login error" {
 		t.Errorf("Wrongly granted access.")
 	}

@@ -11,7 +11,8 @@ import (
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 )
 
-func EditExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, nickNew string) (http.Header, *protocol.User) {
+func editExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto,
+	nick, nickNew string) (header http.Header, usr *protocol.User) {
 	response, request := formSetup(fmt.Sprintf("nickname=%s", nickNew), t, db, "/edit")
 	user := &protocol.User{}
 	protocol.IsExistingUsername(db, name, user)
@@ -28,7 +29,7 @@ func EditExecute(t *testing.T, db *sql.DB, name, pass, photo, tempPhoto, nick, n
 			PhotoUrl: photo,
 			Nickname: nick,
 		},
-		handlers.InfoErr{},
+		&handlers.InfoErr{},
 		tempPhoto,
 	)
 	UpdateCookie(cookieString, response, request)
@@ -42,7 +43,7 @@ func ValidEditPhoto(t *testing.T, db *sql.DB, i int) string {
 	nick := fmt.Sprintf("nick%d", i)
 	tempPhoto := fmt.Sprintf("%s/user%s.jpeg", paths.TempPath, name)
 	photo := Upload(t, db, i)
-	EditExecute(t, db, name, pass, photo, tempPhoto, nick, nick)
+	editExecute(t, db, name, pass, photo, tempPhoto, nick, nick)
 	user := &protocol.User{}
 	flag := protocol.IsExistingUsername(db, name, user)
 	if !flag {
@@ -58,7 +59,7 @@ func ValidEditNickname(t *testing.T, db *sql.DB, i int) {
 	pass := fmt.Sprintf("pass%d%d", i*2, i*2)
 	nickname := fmt.Sprintf("nick%d", i)
 	nickNew := fmt.Sprintf("mick%d", i)
-	_, user := EditExecute(t, db, name, pass, paths.PlaceholderPath, paths.PlaceholderPath, nickname, nickNew)
+	_, user := editExecute(t, db, name, pass, paths.PlaceholderPath, paths.PlaceholderPath, nickname, nickNew)
 	flag := protocol.IsExistingUsername(db, name, user)
 	if !flag {
 		t.Errorf("Wrongly deleted/updated primary key of %s.", name)
