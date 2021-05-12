@@ -10,19 +10,18 @@ In the `entry-task` directory, run `go run cmd/usermanager/*.go`.
 
 ## Test
 
-In the `entry-task` directory, run `go test test/*.go -parallel 1000`. If different test want to be run independently, use the following commands.
+### Unit Testing
 
-### Validator Unit Testing
-
-Run `go test test/validation_test.go`.
-
-### Handlers Unit Testing
-
-Run `go test test/server_test.go`.
+In the `entry-task` directory, run `go test test/v*.go` for validator testing,
+and run `go test test/h*.go` for handlers testing.
 
 ### Massive Testing for Performance
 
-Run `go test test/performance_test.go -parallel 1000`. 
+First, also in the `entry-task` directory, start the server by
+`go run cmd/usermanager/*.go`.
+
+Run `go test test/l*.go -parallel 100` for 1000 login requests, and 
+`go test test/m*.go -parallel 100` for 1000 different request types. 
 
 ## Extension
 
