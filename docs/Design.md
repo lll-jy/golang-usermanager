@@ -191,3 +191,9 @@ The dataflow is seen as follows.
 1. Go Profiling:
    1. Introduction: https://blog.golang.org/pprof (given reference)
    1. Tutorial: https://code.tutsplus.com/tutorials/make-your-go-programs-lightning-fast-with-profiling--cms-29809
+1. Docker setup:
+   1. Docker GoLang introduction: https://hub.docker.com/_/golang
+   1. Docker MySQL introduction: https://hub.docker.com/_/mysql
+   1. Docker MySQL tutorial: https://phoenixnap.com/kb/mysql-docker-container
+   1. Docker with Go running on MySQL: https://medium.com/wesionary-team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5
+   1. Debugging failed MySQL connection: https://serverfault.com/questions/793058/can-not-access-mysql-docker
