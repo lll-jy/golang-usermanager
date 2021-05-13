@@ -32,14 +32,34 @@ CMD ["./usermanager"]
 # docker build --tag server  -f deployments/app.dockerfile .
 # docker run --name server --link db:db -p 8080:8080 -d server
 
-####
-# docker run --name=db -p 33066:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -d mysql/mysql-server:8.0.20
+#### 10:44
+# docker run --name=db -p 3306:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD="password" -d mysql/mysql-server:8.0.20
+# docker exec -ti db bash
 
+#### 11:23
+# docker run --name=db -d mysql/mysql-server:latest --port=3306
+# docker exec -ti db bash
+# ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+# CREATE DATABASE IF NOT EXISTS entryTask;
+# docker build --tag server  -f deployments/app.dockerfile . --no-cache
+# docker run -p 8080:8080 --name server --link db:db -d server
 
-# docker build --tag server  -f deployments/app.dockerfile .
-# docker run -p 8080:8080 --name server -d server
-# docker exec -it db mysql -uroot -p
+### 10:41
+# docker build --tag db -f deployments/db.dockerfile .
+# docker run --name=db -p 3306:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -d db
+# docker exec -ti db bash
 
 # docker container run -it --detach --name db --env MYSQL_RANDOM_ROOT_PASSWORD=no mysql:latest
 
 # update user set password=password("123456") where user="root";
+
+
+#### 13:49
+# docker run --name=db -p 3306:3306 -e MYSQL_ROOT_HOST='%' -d mysql/mysql-server:latest --port=3306
+# docker exec -ti db bash
+# mysql -uroot -p <GENERATED> (see log)
+# ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+# ALTER USER 'root'@'%' IDENTIFIED BY 'password';
+# CREATE DATABASE IF NOT EXISTS entryTask;
+# docker build --tag server  -f deployments/app.dockerfile . --no-cache
+# docker run -p 8080:8080 --name server --link db:db -d server
