@@ -119,7 +119,7 @@ are saved, i.e. when the 'Save' button on the `/edit` page is clicked).
 
 Only on table is needed, so ER diagram is not needed. The table creation query in SQL is as follows.
 
-```
+```sql
 CREATE TABLE users (
     username    VARCHAR(20) PRIMARY KEY,
     password    VARCHAR(100) NOT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE users (
 
 To integrate UTF8 encoding, before creating the table, the following query is run.
 
-```
+```sql
 ALTER DATABASE EntryTask CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 ```
 

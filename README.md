@@ -25,7 +25,11 @@ the local device. In particular, make sure the database exists.
 In addition, check the paths in `cmd/paths/paths.go` under the switch case of `main` are valid. In particular, one needs
 to check the `FileBasePath` directs to some valid place from the temporary file default directory.
 
-In the `entry-task` directory, run `go run cmd/usermanager/*.go`. Do make sure the port :8080 is available. Then, open a 
+In the `entry-task` directory, run
+```shell
+go run cmd/usermanager/main.go
+```
+Do make sure the port :8080 is available. Then, open a 
 browser, e.g. Chrome, and direct to `http://localhost:8080/`, one should see the following page.
 
 ![Index page](docs/screenshots/index.png)
@@ -42,17 +46,51 @@ Before running, make sure the database configuration in the call of `sql.Open(..
 In addition, check the paths in `cmd/paths/paths.go` under the switch case of `test` are valid. In particular, one needs
 to check the `FileBasePath` directs to some valid place from the temporary file default directory.
 
-In the `entry-task` directory, run `go test test/v*.go` for validator testing,
-and run `go test test/h*.go` for handlers testing.
+In the `entry-task` directory, to run validator tests, run 
+```shell
+go test test/validation_test.go
+```
+And to run handlers unit tests, run
+```shell
+go test test/handlers_test.go
+```
 
 ### Massive Testing for Performance
 
-First, also in the `entry-task` directory, start the server by
-`go run cmd/usermanager/*.go`.
+#### Running test cases
 
-Run `go test test/l*.go -parallel 100` for 1000 login requests, and 
-`go test test/m*.go -parallel 100` for 1000 different request types.
+First, make sure that the server has started.
+
+To run 1000 login requests, run
+```shell
+go test test/loginHttpPerformance_test.go -parallel 100
+```
+To run 1000 different request types, run
+```shell
+go test test/mixedHttpPerformance_test.go -parallel 100
+```
 One can watch the terminal where server is running to see logs.
+
+#### Running tests with profiling
+
+If one wants to see the profile, one can run 
+```shell
+go test test/<test file name> <other flags> -cpuprofile <cpu profile file> -memprofile <mem profile file> -bench .
+```
+For example, 
+```shell
+go test test/loginHttpPerformance_test.go -parallel 100 \
+-cpuprofile test/profiles/login_cpu.prof -memprofile test/profiles/login_mem.prof -bench .
+``` 
+Then, inspect the profile 
+interactively using the `pprof` go tool by running 
+```shell
+go tool pprof <.prof file>
+```
+For example, 
+```shell
+go tool pprof test/profiles/login_cpu.prof
+````
 
 ## Run on Virtual Machine using Docker
 
@@ -64,14 +102,34 @@ One can watch the terminal where server is running to see logs.
 
 #### Setup database
 
-First, run `docker run --name=db -p 3306:3306 -e MYSQL_ROOT_HOST='%' -d mysql/mysql-server:latest --port=3306` to start 
-a MySQL server on Docker. Then, run `docker exec -ti db bash` to start the bash, and run `mysql -uroot -p` in the bash 
-start the MySQL command line tool. Use the password generated in logs to log in.
+First, start a MySQL server on Docker by running 
+```shell
+docker run --name=db -p 3306:3306 -e MYSQL_ROOT_HOST='%' -d mysql/mysql-server:latest --port=3306
+```
+Then, start the bash by running
+```shell
+docker exec -ti db bash
+```
+Run 
+```shell
+mysql -uroot -p
+```
+in the bash to start the MySQL command line tool. Use the password generated in logs to log in.
 
-Then, change the password of localhost by running `ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';` in MySQL. 
+Then, change the password of localhost by running the following query in MySQL.
+```sql
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+``` 
 Also, make sure that the user, password, and host in this database matches the `sql.Open` in `cmd/usermanager/main.go`, 
-for example, run `ALTER USER 'root'@'%' IDENTIFIED BY 'password';`. In addition, create the database wanted if it does 
-not exist, for example, run `CREATE DATABASE IF NOT EXISTS entryTask;`
+for example, run 
+```sql
+ALTER USER 'root'@'%' IDENTIFIED BY 'password';
+```
+In addition, create the database wanted if it does 
+not exist, for example, run 
+```sql
+CREATE DATABASE IF NOT EXISTS entryTask;
+```
 
 #### Launch server
 
@@ -86,16 +144,27 @@ FileBasePath = ""
 FileBaseRelativePath := "../../../../tmp"
 ```
 
-Build the image called `server` by running `docker build --tag server  -f deployments/app.dockerfile . --no-cache` in 
-terminal in the `entry-task` directory. Then, run the container also called `server` by 
-`docker run -p 8080:8080 --name server --link db:db -d server`.
+In the `entry-task` directory, build the image called `server` by running 
+```shell
+docker build --tag server  -f deployments/app.dockerfile . --no-cache
+```
+Then, run the container also called `server` by running
+```shell
+docker run -p 8080:8080 --name server --link db:db -d server
+```
 
 Then, open the browser,and direct to `http://localhost:8080/`, one should see the index page. Do make sure the port 
 :8080 is available. Stop other servers if they are using this port.
 
-To stop the server, one can run `docker stop server` in the terminal.
+To stop the server, one can run 
+```shell
+docker stop server
+```
 
 ### Test on Docker
 
-Open bash on the server by running `docker exec -ti server bash` in the terminal. Then do the same thing as on macOS to 
-do the tests.
+Open bash on the server by running
+```shell
+docker exec -ti server bash
+```
+Then do the same thing as on macOS to do the tests.

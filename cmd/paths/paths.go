@@ -10,8 +10,10 @@ func SetupPaths(src string) {
 	switch src {
 	case "main":
 		PlaceholderPath = "assets/placeholder.jpeg"
-		FileBasePath = "../../../Desktop/EntryTask/entry-task/test/data/upload"
-		FileBaseRelativePath = "test/data/upload"
+		//FileBasePath = "../../../Desktop/EntryTask/entry-task/test/data/upload"
+		//FileBaseRelativePath = "test/data/upload"
+		FileBasePath = ""
+		FileBaseRelativePath = "../../../../tmp"
 		TempPath = "test/data/temp"
 		break
 	case "test":
