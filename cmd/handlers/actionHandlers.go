@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
@@ -50,7 +51,7 @@ func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	ie := &InfoErr{}
 	photo := ""
 	if protocol.IsExistingUsername(db, name, &u) {
-		log.Printf("User %s found.", name)
+		logging.Log(logging.INFO, fmt.Sprintf("User %s found.", name))
 		if protocol.IsCorrectPassword(pass, u.Password) {
 			log.Printf("Login to %s successful!", name)
 			u.Name = name

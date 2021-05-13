@@ -34,7 +34,8 @@ browser, e.g. Chrome, and direct to `http://localhost:8080/`, one should see the
 
 ![Index page](docs/screenshots/index.png)
 
-The server can be stopped by simply press `Ctrl` + `C` in the terminal where the server is running.
+The server can be stopped by simply press `Ctrl` + `C` in the terminal where the server is running. Log files are found 
+in `build/logs` directory.
 
 ### Test on macOS
 
@@ -69,7 +70,6 @@ To run 1000 different request types, run
 ```shell
 go test test/mixedHttpPerformance_test.go -parallel 100
 ```
-One can watch the terminal where server is running to see logs.
 
 #### Running tests with profiling
 

@@ -86,7 +86,7 @@ func initLog() {
 		"build/logs/log.%Y%m%d%H%M",
 		rotatelogs.WithLinkName("build/logs/log"),
 		rotatelogs.WithMaxAge(24*time.Hour),
-		rotatelogs.WithRotationTime(30*time.Second),
+		rotatelogs.WithRotationTime(15*time.Minute),
 	)
 	if err != nil {
 		log.Fatalf("Cannot prepare log files.")

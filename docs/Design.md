@@ -172,6 +172,7 @@ The dataflow is seen as follows.
 | `github.com/go-sql-driver/mysql` | Go MySQL driver |
 | `github.com/gorilla/mux` | router framework |
 | `github.com/gorilla/securecookie` | cookie encoding and decoding framework |
+| `github.com/lestrrat-go/file-rotatelog` | rotate log files |
 | `golang.org/x/crypto/bcrypt`  | password hashing and checking |
 | `google.golang.org/protobuf/proto`, `google.golang.org/protobuf/reflect/protoreflect`, `google.golang.org/protobuf/runtime/protoimpl`| protobuf framework |
 | `text/template` | HTML template parsing framework |
@@ -199,3 +200,4 @@ The dataflow is seen as follows.
    1. Docker MySQL tutorial: https://phoenixnap.com/kb/mysql-docker-container
    1. Docker with Go running on MySQL: https://medium.com/wesionary-team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5
    1. Debugging failed MySQL connection: https://serverfault.com/questions/793058/can-not-access-mysql-docker
+1. Log rotate: https://github.com/lestrrat/go-file-rotatelogs
