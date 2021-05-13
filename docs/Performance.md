@@ -187,6 +187,9 @@ The top 10 samples of cumulative space are shown as follows.
       30ms  3.00% 29.00%      250ms 25.00%  net.sysSocket
          0     0% 29.00%      210ms 21.00%  runtime.findrunnable
 
+Handling requests consumes the most flat time, and dialing connections are the most time-consuming procedures 
+cumulatively.
+
 ##### Mem profile
 
 A sample run of the test cases gives the following profile data.
@@ -220,6 +223,8 @@ The top 10 samples of cumulative space are shown as follows.
       512.07kB  1.97% 31.61%  3073.02kB 11.82%  net/http.ReadResponse
              0     0% 31.61%  3072.52kB 11.82%  net/http.(*Client).Post
              0     0% 31.61%  3072.52kB 11.82%  net/http.(*Client).PostForm
+
+Handling requests and dialing connections are the most space-consuming procedures.
 
 ### Mixed Type of Requests
 
@@ -287,13 +292,16 @@ The top 10 samples of cumulative time are shown as follows.
          0     0% 26.88%      190ms 20.43%  net.sysSocket
          0     0% 26.88%      190ms 20.43%  runtime.findrunnable
 
+Handling requests consumes the most flat time, and dialing connections are the most time-consuming procedures 
+cumulatively.
+
 ##### Mem profile
 
 A sample run of the test cases gives the following profile data.
 
-![Mixed mem profile](diagrams/pprof_cpu_mixed.jpg)
+![Mixed mem profile](diagrams/pprof_mem_mixed.jpg)
 
-The top 10 samples (out of 71) in the profile are shown as follows.
+The top 10 samples (out of 71) in the profile are shown as follows. 
 
           flat  flat%   sum%        cum   cum%
      5140.03kB 23.14% 23.14%  5140.03kB 23.14%  bufio.NewReaderSize
@@ -307,7 +315,7 @@ The top 10 samples (out of 71) in the profile are shown as follows.
       512.17kB  2.31% 63.11%   512.17kB  2.31%  net/http.Header.Clone
       512.09kB  2.31% 65.42%   512.09kB  2.31%  net/http/cookiejar.(*Jar).cookies
 
-The top 10 samples of cumulative space are shown as follows.
+The top 10 samples of cumulative space are shown as follows. 
     
           flat  flat%   sum%        cum   cum%
       512.05kB  2.31%  2.31% 10782.24kB 48.55%  net/http.(*Transport).dialConn
@@ -320,3 +328,6 @@ The top 10 samples of cumulative space are shown as follows.
       512.02kB  2.31% 27.76%  4096.87kB 18.45%  net/http.(*Client).do
      2570.01kB 11.57% 39.33%  2570.01kB 11.57%  bufio.NewWriterSize (inline)
              0     0% 39.33%  2560.62kB 11.53%  command-line-arguments.Test_mixedRequests.func2
+
+Handling cookies consumes the most flat memory, and handling POST requests and dialing connections are the most
+space-consuming procedures cumulatively.
