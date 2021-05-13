@@ -32,7 +32,8 @@ func MakeRequest(method string, url string, t *testing.T) *http.Request {
 	return request
 }
 func SetupDb(t *testing.T) *sql.DB {
-	db, err := sql.Open("mysql", "root:@/entryTask")
+	//db, err := sql.Open("mysql", "root:password@/entryTask")
+	db, err := sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
 	if err != nil {
 		t.Errorf("Database connection failed: %v", err.Error())
 	}

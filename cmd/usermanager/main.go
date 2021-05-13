@@ -64,7 +64,6 @@ func setDb() {
 	var err error
 	//db, err = sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/entryTask")
 	db, err = sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
-	//db, err = sql.Open("mysql", "root:password@tcp(localhost)/entryTask")
 	//db, err = sql.Open("mysql", "root:password@/entryTask")
 	if err != nil {
 		log.Printf("Error connecting to database. %s", err.Error())
