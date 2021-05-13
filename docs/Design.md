@@ -13,7 +13,9 @@
 
 ## Architecture/Structure
 
-The app is a simple web application with the web app server connected to a database (see Figure below). HTTP requests are sent by the clients to the server and handled as queries to database. The web app server gets data from the database and send the information as HTTP response back to the client.
+The app is a simple web application with the web app server connected to a database (see Figure below). HTTP requests 
+are sent by the clients to the server and handled as queries to database. The web app server gets data from the database 
+and send the information as HTTP response back to the client.
 
 ![architecture](diagrams/architecture.png)
 
@@ -62,10 +64,12 @@ The app is a simple web application with the web app server connected to a datab
 * Note: user info refers to username and password, and user profile refers to the user profile photo and nickname.
 
 ### GET `/`
-Display the homepage to the user from the HTML template that allows the user to choose to provide the username and password to log in.
+Display the homepage to the user from the HTML template that allows the user to choose to provide the username and 
+password to log in.
 
 ### GET `/signup`
-Display the sign up page to the user from the HTML template that allows the user to provide the username and password that the user wants to sign up for.
+Display the sign up page to the user from the HTML template that allows the user to provide the username and password 
+that the user wants to sign up for.
 
 ### POST `/signup`
 Insert a new user to the database with the username and password specified. 
@@ -83,19 +87,23 @@ Unrecognized but valid username log in would redirect to `GET /signup`. The user
 User logs out and go back to the home page. Remove local photo file.
 
 ### GET `/view`
-Display the profile page to the user from the HTML template that allows the user to view the username, nickname, and profile photo, and choose to edit profile, reset password, or delete user.
+Display the profile page to the user from the HTML template that allows the user to view the username, nickname, and 
+profile photo, and choose to edit profile, reset password, or delete user.
 
 ### POST `/delete`
 Delete the user from the database (including the photo in the file base) and redirect to the homepage.
 
 ### GET `/edit`
-Display the edit profile page to the user from the HTML template that allows the user to (re-)upload profile photo and/or change a nickname. Remove unused photos when necessary.
+Display the edit profile page to the user from the HTML template that allows the user to (re-)upload profile photo 
+and/or change a nickname. Remove unused photos when necessary.
 
 ### POST `/edit`
-Save the photo uploaded by the user and get its address. Then save the changes to the user profile to the database and redirect to `GET /view`.
+Save the photo uploaded by the user and get its address. Then save the changes to the user profile to the database and 
+redirect to `GET /view`.
 
 ### GET `/reset`
-Display the reset user info page to the user from the HTML template that allows the user to reset the username and/or password.
+Display the reset user info page to the user from the HTML template that allows the user to reset the username and/or 
+password.
 
 ### POST `/reset`
 Save the new user info and update the database accordingly. Then redirect to `GET /view`.
@@ -127,15 +135,22 @@ ALTER DATABASE EntryTask CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 ```
 
 ### Username
-The username is the primary key that uniquely identifies each user. The username should be a 4-20 character string containing numbers, letters, hyphens ("-"), and underscores ("_") only, and the first character must be a letter. Duplicate username is not allowed.
+The username is the primary key that uniquely identifies each user. The username should be a 4-20 character string 
+containing numbers, letters, hyphens ("-"), and underscores ("_") only, and the first character must be a letter. 
+Duplicate username is not allowed.
 
 ### Password
-The password should not be null, and the password that user provides should be a 4-20 character string. The original password is hashed before it is saved to the database.
+The password should not be null, and the password that user provides should be a 4-20 character string. The original 
+password is hashed before it is saved to the database.
 
 ### Photo
-The photos are stored as files at some particular place with a path known, and this path is the content of the photo attribute in the database. This method of photo handling is preferred over storing the photo directly as `VARBINARY` in the database because of the following reasons:
+The photos are stored as files at some particular place with a path known, and this path is the content of the photo 
+attribute in the database. This method of photo handling is preferred over storing the photo directly as `VARBINARY` in 
+the database because of the following reasons:
 1. Photos are usually big files, which may use too much space in the database.
-1. If the photo is directly stored in the database, anyone with access to the database can access the photo, whereas storing the photo files separately makes seperate authentification and access to the photos possible, so it potentially protects the user's information in a sense.
+1. If the photo is directly stored in the database, anyone with access to the database can access the photo, whereas 
+   storing the photo files separately makes separate authentication and access to the photos possible, so it potentially 
+   protects the user's information in a sense.
 
 ### Nickname
 The nickname can be any UTF-8 string of no more than 30 characters.
