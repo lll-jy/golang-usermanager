@@ -7,6 +7,28 @@ github.com/gorilla/mux
 # github.com/gorilla/securecookie v1.1.1
 ## explicit
 github.com/gorilla/securecookie
+# github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
+## explicit
+github.com/lestrrat-go/file-rotatelogs
+github.com/lestrrat-go/file-rotatelogs/internal/option
+# github.com/lestrrat-go/strftime v1.0.4
+## explicit
+github.com/lestrrat-go/strftime
+# github.com/lestrrat/go-apache-logformat v2.0.1+incompatible
+## explicit
+github.com/lestrrat/go-apache-logformat
+github.com/lestrrat/go-apache-logformat/internal/httputil
+github.com/lestrrat/go-apache-logformat/internal/logctx
+# github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
+## explicit
+# github.com/lestrrat/go-strftime v0.0.0-20180220042222-ba3bf9c1d042
+## explicit
+github.com/lestrrat/go-strftime
+# github.com/natefinch/lumberjack v2.0.0+incompatible
+## explicit
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
 # github.com/purnaresa/bulwark v0.0.0-20201001150757-1cec324746b2
 ## explicit
 # golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
@@ -44,3 +66,5 @@ google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+# gopkg.in/natefinch/lumberjack.v2 v2.0.0
+## explicit

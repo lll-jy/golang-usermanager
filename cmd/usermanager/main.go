@@ -8,13 +8,14 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"os"
+	"time"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 )
 
 // server main method
@@ -79,16 +80,18 @@ func makeHandler(fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Hand
 	}
 }
 
-// https://medium.com/rahasak/golang-logging-with-unix-logrotate-41ec2672b439#:~:text=Golang%20log%20package&text=By%20default%20log%20packages%20does%20not%20support%20log%20rotations.
 func initLog() {
-	//n := config.dotLogs + "/usermanager.log"
-	n := "build/usermanager.log"
-	f, err := os.OpenFile(n, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	// https://github.com/lestrrat/go-file-rotatelogs
+	logf, err := rotatelogs.New(
+		"build/logs/log.%Y%m%d%H%M",
+		rotatelogs.WithLinkName("build/logs/log"),
+		rotatelogs.WithMaxAge(24*time.Hour),
+		rotatelogs.WithRotationTime(30*time.Second),
+	)
 	if err != nil {
-		os.Exit(1)
+		log.Fatalf("Cannot prepare log files.")
 	}
-	log.SetOutput(f)
-	log.SetFlags(log.LstdFlags|log.Lshortfile)
+	log.SetOutput(logf)
 }
 
 func main() {
