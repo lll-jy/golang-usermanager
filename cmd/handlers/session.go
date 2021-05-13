@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"net/http"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
@@ -46,11 +47,11 @@ type PageInfo struct {
 func generatePageInfo(user, tempUser, nameErr, passErr, repeatPassErr, photo string) PageInfo {
 	u := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(user), u); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user: %s", user, err.Error())
+		logging.Log(logging.DEBUG, fmt.Sprintf("Error: wrong format! %s cannot be parsed as a user: %s", user, err.Error()))
 	}
 	tu := &protocol.User{}
 	if err := proto.Unmarshal([]uint8(tempUser), tu); err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user): %s", tempUser, err.Error())
+		logging.Log(logging.DEBUG, fmt.Sprintf("Error: wrong format! %s cannot be parsed as a user (temp user): %s", tempUser, err.Error()))
 	}
 	ie := &InfoErr{
 		NameErr:           nameErr,
@@ -91,11 +92,11 @@ func GetPageInfo(r *http.Request) PageInfo {
 func SetSessionInfo(u *protocol.User, tu *protocol.User, ie *InfoErr, photo string) string {
 	user, err := proto.Marshal(u)
 	if err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user.", u)
+		logging.Log(logging.DEBUG, fmt.Sprintf("Error: wrong format! %s cannot be parsed as a user.", u))
 	}
 	tempUser, err := proto.Marshal(tu)
 	if err != nil {
-		log.Printf("Error: wrong format! %s cannot be parsed as a user (temp user).", tu)
+		logging.Log(logging.DEBUG, fmt.Sprintf("Error: wrong format! %s cannot be parsed as a user (temp user).", tu))
 	}
 	value := map[string]string{
 		"user":          string(user),
@@ -108,7 +109,7 @@ func SetSessionInfo(u *protocol.User, tu *protocol.User, ie *InfoErr, photo stri
 	if encoded, err := cookieHandler.Encode("session", value); err == nil {
 		return encoded
 	} else {
-		log.Printf("Session cannot be parsed and encoded.")
+		logging.Log(logging.DEBUG, fmt.Sprintf("Session cannot be parsed and encoded."))
 		return ""
 	}
 }

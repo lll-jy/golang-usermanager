@@ -4,8 +4,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"io"
-	"log"
 )
 
 // https://www.melvinvivas.com/how-to-encrypt-and-decrypt-data-using-aes/
@@ -23,11 +24,11 @@ func prepare(pass string) cipher.AEAD {
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("Cannot crate cipher block from key %v: %s", key, err.Error())
+		logging.Log(logging.DEBUG, fmt.Sprintf("Cannot crate cipher block from key %v: %s", key, err.Error()))
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		log.Printf("Cannot create new GCM from block %v: %s", block, err.Error())
+		logging.Log(logging.DEBUG, fmt.Sprintf("Cannot create new GCM from block %v: %s", block, err.Error()))
 	}
 	return gcm
 }
@@ -38,7 +39,7 @@ func encrypt(toEncrypt []byte, pass string) []byte {
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		log.Printf("Cannot create nonce from gcm %v: %s", nonce, err.Error())
+		logging.Log(logging.DEBUG, fmt.Sprintf("Cannot create nonce from gcm %v: %s", nonce, err.Error()))
 	}
 	return gcm.Seal(nonce, nonce, toEncrypt, nil)
 }
@@ -50,7 +51,7 @@ func decrypt(encrypted []byte, pass string) []byte {
 	nonce, ciphered := encrypted[:nonceSize], encrypted[nonceSize:]
 	decrypted, err := gcm.Open(nil, nonce, ciphered, nil)
 	if err != nil {
-		log.Printf("Cannot decrypt data: %s", err.Error())
+		logging.Log(logging.ERROR, fmt.Sprintf("Cannot decrypt data: %s", err.Error()))
 	}
 	return decrypted
 }
