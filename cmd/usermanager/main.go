@@ -6,6 +6,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"log"
 	"net/http"
 	"time"
@@ -68,7 +70,7 @@ func setDb() {
 	//db, err = sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
 	db, err = sql.Open("mysql", "root:password@/entryTask")
 	if err != nil {
-		log.Printf("Error connecting to database. %s", err.Error())
+		logging.Log(logging.ERROR, fmt.Sprintf("Error connecting to database. %s", err.Error()))
 	}
 	db.SetMaxOpenConns(500)
 	db.SetMaxIdleConns(300)
