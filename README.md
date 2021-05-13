@@ -168,3 +168,8 @@ Open bash on the server by running
 docker exec -ti server bash
 ```
 Then do the same thing as on macOS to do the tests.
+
+## Further problems
+
+1. I cannot connect to MySQL correctly using `docker-compose`.
+1. Running on docker seem to be much slower than running using go test.
