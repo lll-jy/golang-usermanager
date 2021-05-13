@@ -14,28 +14,30 @@ services:
         links:
             - database
         container_name: golang-docker-web
+        restart: always
         environment:
             - 'DB_PORT=3306'
             - 'DB_HOST=database'
   
     database:
         image: mysql:5.7.22
-        command: --default-authenticatio-plugin=mysql_native_password
+        build:
+            context: ../.
+            dockerfile: ./deployments/db.dockerfile
         restart: always
         environment:
-            #MYSQL_ROOT_PASSWORD: root
+            MYSQL_ROOT_PASSWORD: password
             MYSQL_USER: root
-            #MYSQL_PASSWORD: root
-            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_PASSWORD: password
+            #MYSQL_ALLOW_EMPTY_PASSWORD: yes
             MYSQL_DATABASE: entryTask
-            MYSQL_HOST: golang-docker-web
-
+            #MYSQL_HOST: golang-docker-web
         container_name: golang-docker-db
         ports:
             - 3306:3306
         volumes:
-            - golang-docker-data:/var/lib/mysql 
-            - ./deployments/init.sql:/data/init.sql
+            - golang-docker-data:/var/lib/mysql
+        #    - ./../deployments/init.sql:/data/init.sql
         # command: --init-file /data/init.sql
         # command: "mysql -uroot < deployments/init.sql"
   
@@ -47,3 +49,6 @@ volumes:
 # https://medium.com/wesionary-team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5
 # docker-compose -f deployments/docker-compose.yml build --no-cache
 # docker-compose -f deployments/docker-compose.yml up
+# docker exec -ti golang-docker-db bash
+# ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+# CREATE DATABASE IF NOT EXISTS entryTask;

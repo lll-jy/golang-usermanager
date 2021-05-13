@@ -23,7 +23,7 @@ CMD ["./usermanager"]
 
 # docker run --name=db -d mysql/mysql-server:latest
 
-# docker run --name=db -p 3306:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -d mysql/mysql-server:8.0.20
+# docker run --name=db -p 3306:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -d mysql/mysql-server:8.0.20
 
 # docker run --name=db -p3306:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -d mysql/mysql-server:8.0.20
 # docker exec -it db bash
@@ -31,6 +31,9 @@ CMD ["./usermanager"]
 
 # docker build --tag server  -f deployments/app.dockerfile .
 # docker run --name server --link db:db -p 8080:8080 -d server
+
+####
+# docker run --name=db -p 33066:3306 -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -d mysql/mysql-server:8.0.20
 
 
 # docker build --tag server  -f deployments/app.dockerfile .
