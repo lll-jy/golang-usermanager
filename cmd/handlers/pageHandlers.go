@@ -3,7 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"net/http"
 	"text/template"
 )
@@ -38,11 +38,11 @@ func renderRestrictedTemplate(w http.ResponseWriter, r *http.Request, tmpl strin
 		fn(&info)
 		renderTemplate(w, tmpl, &info)
 		header.Set("status", "successful view")
-		log.Printf("Opened %s page.", tmpl)
+		logging.Log(logging.INFO, fmt.Sprintf("Opened %s page.", tmpl))
 	} else {
 		http.Redirect(w, r, "/", 302)
 		header.Set("status", "login error")
-		log.Printf("Access denied. Redirect to homepage.")
+		logging.Log(logging.INFO, fmt.Sprintf("Access denied. Redirect to homepage."))
 	}
 }
 
