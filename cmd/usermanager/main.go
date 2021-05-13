@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/handlers"
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
@@ -63,8 +64,8 @@ func setHandleFunc(router *mux.Router) {
 func setDb() {
 	var err error
 	//db, err = sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/entryTask")
-	db, err = sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
-	//db, err = sql.Open("mysql", "root:password@/entryTask")
+	//db, err = sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
+	db, err = sql.Open("mysql", "root:password@/entryTask")
 	if err != nil {
 		log.Printf("Error connecting to database. %s", err.Error())
 	}
@@ -78,11 +79,24 @@ func makeHandler(fn func(*sql.DB, http.ResponseWriter, *http.Request)) http.Hand
 	}
 }
 
+// https://medium.com/rahasak/golang-logging-with-unix-logrotate-41ec2672b439#:~:text=Golang%20log%20package&text=By%20default%20log%20packages%20does%20not%20support%20log%20rotations.
+func initLog() {
+	//n := config.dotLogs + "/usermanager.log"
+	n := "build/usermanager.log"
+	f, err := os.OpenFile(n, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		os.Exit(1)
+	}
+	log.SetOutput(f)
+	log.SetFlags(log.LstdFlags|log.Lshortfile)
+}
+
 func main() {
 	setDb()
 	//tryConnection(db)
 	paths.SetupPaths("main")
 	handlers.Initialize(db)
+	initLog()
 
 	setHandleFunc(router)
 
