@@ -4,8 +4,8 @@ package protocol
 import (
 	"database/sql"
 	"fmt"
+	"git.garena.com/jiayu.li/entry-task/cmd/logging"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"regexp"
 
 	"git.garena.com/jiayu.li/entry-task/cmd/paths"
@@ -37,7 +37,7 @@ func ConvertToString(i interface{}) string {
 func IsExistingUsername(db *sql.DB, username string, user *User) bool {
 	query, err := db.Prepare("SELECT password, photo, nickname FROM users WHERE username = ? AND username <> ?")
 	if err != nil {
-		log.Printf("Cannot parse query: %s", err.Error())
+		logging.Log(logging.ERROR, fmt.Sprintf("Cannot parse query: %s", err.Error()))
 		return false
 	}
 	var p, pu, nn interface{}
