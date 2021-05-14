@@ -25,6 +25,25 @@ import (
 var router = mux.NewRouter()
 var db *sql.DB
 
+func main() {
+	setDb()
+	//tryConnection(db)
+	paths.SetupPaths("main")
+	handlers.Initialize(db)
+	initLog()
+
+	setHandleFunc(router)
+
+	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
+	staticFileDir := http.Dir("./")
+	staticFileHandler := http.StripPrefix("/", http.FileServer(staticFileDir))
+	router.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
+
+	http.Handle("/", router)
+	http.ListenAndServe(":8080", nil)
+	defer db.Close()
+}
+
 func setHandleFunc(router *mux.Router) {
 	handlers.PrepareTemplates("templates/%s.html")
 	paths.SetupPaths("main")
@@ -96,21 +115,3 @@ func initLog() {
 	log.SetOutput(logf)
 }
 
-func main() {
-	setDb()
-	//tryConnection(db)
-	paths.SetupPaths("main")
-	handlers.Initialize(db)
-	initLog()
-
-	setHandleFunc(router)
-
-	// https://www.sohamkamani.com/golang/how-to-build-a-web-application/
-	staticFileDir := http.Dir("./")
-	staticFileHandler := http.StripPrefix("/", http.FileServer(staticFileDir))
-	router.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
-
-	http.Handle("/", router)
-	http.ListenAndServe(":8080", nil)
-	defer db.Close()
-}

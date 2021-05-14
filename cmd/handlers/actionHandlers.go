@@ -16,6 +16,54 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	header := w.Header()
+	header.Set("user", "")
+	header.Set("status", "")
+
+	name := r.FormValue("name")
+	pass := r.FormValue("password")
+
+	redirectTarget := "/"
+	u := protocol.User{}
+	tu := createUser(name, pass)
+	ie := &InfoErr{}
+	photo := ""
+
+	if protocol.IsExistingUsername(db, name, &u) {
+		logging.Log(logging.INFO, fmt.Sprintf("User %s found.", name))
+		if protocol.IsCorrectPassword(pass, u.Password) {
+			logging.Log(logging.INFO, fmt.Sprintf("Login to %s successful!", name))
+			u.Name = name
+			err := DecryptPhoto(u.PhotoUrl, pass, name, &photo)
+			if err != nil {
+				logging.Log(logging.ERROR, fmt.Sprintf(err.Error()))
+			}
+			tu.PhotoUrl = u.PhotoUrl
+			tu.Nickname = u.Nickname
+			redirectTarget = "/view"
+			user, err := proto.Marshal(&u)
+			if err != nil {
+				logging.Log(logging.DEBUG, fmt.Sprintf("User %v cannot be parsed as a user: %s", &u, err.Error()))
+			}
+
+			header.Set("user", string(user))
+			header.Set("status", "successful login")
+		} else {
+			logging.Log(logging.INFO, fmt.Sprintf("Login to %s unsuccessful due to wrong password!", name))
+			tu.Password = ""
+			ie.PasswordErr = "Incorrect password."
+			header.Set("status", "incorrect password")
+		}
+	} else {
+		logging.Log(logging.INFO, fmt.Sprintf("User %s does not exists. Redirect to sign up page.", name))
+		redirectTarget = "/signup"
+		header.Set("status", "user not exist")
+	}
+	setSession(&u, &tu, ie, photo, w)
+	http.Redirect(w, r, redirectTarget, 302)
+}
+
 // DecryptPhoto decrypts photo at url with pass as key of the user of given username and copy it to a local
 // location with path stored at photo.
 func DecryptPhoto(url string, pass string, name string, photo *string) error {
@@ -36,50 +84,6 @@ func DecryptPhoto(url string, pass string, name string, photo *string) error {
 	return nil
 }
 
-func LoginHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	header := w.Header()
-	header.Set("user", "")
-	header.Set("status", "")
-	name := r.FormValue("name")
-	pass := r.FormValue("password")
-	redirectTarget := "/"
-	u := protocol.User{}
-	tu := createUser(name, pass)
-	ie := &InfoErr{}
-	photo := ""
-	if protocol.IsExistingUsername(db, name, &u) {
-		logging.Log(logging.INFO, fmt.Sprintf("User %s found.", name))
-		if protocol.IsCorrectPassword(pass, u.Password) {
-			logging.Log(logging.INFO, fmt.Sprintf("Login to %s successful!", name))
-			u.Name = name
-			err := DecryptPhoto(u.PhotoUrl, pass, name, &photo)
-			if err != nil {
-				logging.Log(logging.ERROR, fmt.Sprintf(err.Error()))
-			}
-			tu.PhotoUrl = u.PhotoUrl
-			tu.Nickname = u.Nickname
-			redirectTarget = "/view"
-			user, err := proto.Marshal(&u)
-			if err != nil {
-				logging.Log(logging.DEBUG, fmt.Sprintf("User %v cannot be parsed as a user: %s", &u, err.Error()))
-			}
-			header.Set("user", string(user))
-			header.Set("status", "successful login")
-		} else {
-			logging.Log(logging.INFO, fmt.Sprintf("Login to %s unsuccessful due to wrong password!", name))
-			tu.Password = ""
-			ie.PasswordErr = "Incorrect password."
-			header.Set("status", "incorrect password")
-		}
-	} else {
-		logging.Log(logging.INFO, fmt.Sprintf("User %s does not exists. Redirect to sign up page.", name))
-		redirectTarget = "/signup"
-		header.Set("status", "user not exist")
-	}
-	setSession(&u, &tu, ie, photo, w)
-	http.Redirect(w, r, redirectTarget, 302)
-}
-
 func LogoutHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	clearSession(w)
@@ -91,6 +95,21 @@ func LogoutHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, "/", 302)
+}
+
+func SignupHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	userInfoHandler(db, w, r, "/signup", "/edit", "INSERT INTO users VALUES (?, ?, NULL, NULL) ON DUPLICATE KEY UPDATE username = ?")
+}
+
+func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	info := GetPageInfo(r)
+	if info.User.Password != "" {
+		userInfoHandler(db, w, r, "/reset", "/view",
+			"UPDATE users SET username = ?, password = ? WHERE username = ?")
+	} else {
+		logging.Log(logging.INFO, fmt.Sprintf("Access denied. Redirect to homepage."))
+		http.Redirect(w, r, "/", 302)
+	}
 }
 
 // userInfoHandler is the shared part of signup and reset page, with rt as the route, tgt as the redirecting target,
@@ -180,20 +199,6 @@ func userInfoHandler(db *sql.DB, w http.ResponseWriter, r *http.Request, rt stri
 	http.Redirect(w, r, redirectTarget, 302)
 }
 
-func SignupHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	userInfoHandler(db, w, r, "/signup", "/edit", "INSERT INTO users VALUES (?, ?, NULL, NULL) ON DUPLICATE KEY UPDATE username = ?")
-}
-
-func ResetHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	info := GetPageInfo(r)
-	if info.User.Password != "" {
-		userInfoHandler(db, w, r, "/reset", "/view", "UPDATE users SET username = ?, password = ? WHERE username = ?")
-	} else {
-		logging.Log(logging.INFO, fmt.Sprintf("Access denied. Redirect to homepage."))
-		http.Redirect(w, r, "/", 302)
-	}
-}
-
 func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	info := GetPageInfo(r)
 	if info.User.Password != "" {
@@ -217,6 +222,7 @@ func EditHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 				logging.Log(logging.DEBUG, fmt.Sprintf("Execution of query updating user profile failed: %s", err.Error()))
 			}
 			logging.Log(logging.INFO, fmt.Sprintf("User information of %s updated.", info.User.Name))
+
 			if info.User.PhotoUrl != "" && info.User.PhotoUrl != paths.PlaceholderPath {
 				err := os.Remove(info.User.PhotoUrl)
 				if err == nil {
