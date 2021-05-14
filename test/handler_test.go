@@ -28,9 +28,7 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Login", func(t *testing.T) {
-		t.Logf("I'm there")
 		server_helpers.ClearEffects(db)
-		t.Logf("I'm here")
 		for i := 0; i < 5; i++ {
 			server_helpers.ValidLogin(t, i, db)
 		}

@@ -22,9 +22,6 @@ Before running, make sure the database configuration in the call of
 `sql.Open("mysql", "{user}:{password}@{host}/{database}")` in `cmd/usermanager/main.go#setDb()` matches the settings on 
 the local device. In particular, make sure the database exists.
 
-In addition, check the paths in `cmd/paths/paths.go` under the switch case of `main` are valid. In particular, one needs
-to check the `FileBasePath` directs to some valid place from the temporary file default directory.
-
 In the `entry-task` directory, run
 ```shell
 go run cmd/usermanager/main.go
@@ -43,9 +40,6 @@ in `build/logs` directory.
 
 Before running, make sure the database configuration in the call of `sql.Open(...)` (same as above) in 
 `test/server_helpers/util.go#SetupDb(t *testing.T)` matches the settings on the local device. 
-
-In addition, check the paths in `cmd/paths/paths.go` under the switch case of `test` are valid. In particular, one needs
-to check the `FileBasePath` directs to some valid place from the temporary file default directory.
 
 In the `entry-task` directory, to run validator tests, run 
 ```shell
@@ -136,13 +130,6 @@ CREATE DATABASE IF NOT EXISTS entryTask;
 After the above steps are done, we can build the image to run the web app. Before this, make sure all the settings in 
 the source code match the actual setting in the Docker environment, including the two calls of `sql.Open` in 
 `cmd/usermanager/main.go` and `test/server_helpers/util.go`, and the paths.
-
-The paths on the Docker virtual machine environment for the temp file and relative path are recommended to be
-
-```go
-FileBasePath = ""
-FileBaseRelativePath := "../../../../tmp"
-```
 
 In the `entry-task` directory, build the image called `server` by running 
 ```shell

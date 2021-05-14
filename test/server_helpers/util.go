@@ -32,8 +32,8 @@ func MakeRequest(method string, url string, t *testing.T) *http.Request {
 	return request
 }
 func SetupDb(t *testing.T) *sql.DB {
-	//db, err := sql.Open("mysql", "root:password@/entryTask")
-	db, err := sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
+	db, err := sql.Open("mysql", "root:password@/entryTask")
+	//db, err := sql.Open("mysql", "root:password@tcp(172.17.0.2:3306)/entryTask")
 	if err != nil {
 		t.Errorf("Database connection failed: %v", err.Error())
 	}
@@ -104,7 +104,8 @@ func ClearEffects(db *sql.DB) {
 	handlers.ExecuteQuery(db, "DELETE FROM users WHERE username LIKE 'test%'")
 	for i := 0; i < 5; i++ {
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("pass%d%d", i*2, i*2)), bcrypt.MinCost)
-		handlers.ExecuteQuery(db, "UPDATE users SET password = ?, photo = ?, nickname = ? WHERE username = ?", hashed, nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
+		handlers.ExecuteQuery(db, "UPDATE users SET password = ?, photo = ?, nickname = ? WHERE username = ?",
+			hashed, nil, fmt.Sprintf("nick%d", i), fmt.Sprintf("user%d", i))
 	}
 }
 
