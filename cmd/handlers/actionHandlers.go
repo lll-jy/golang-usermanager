@@ -6,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"git.garena.com/jiayu.li/entry-task/cmd/logging"
+	"git.garena.com/jiayu.li/entry-task/cmd/paths"
+	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
-
-	"git.garena.com/jiayu.li/entry-task/cmd/paths"
-	"git.garena.com/jiayu.li/entry-task/cmd/protocol"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -259,22 +257,19 @@ func UploadHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			defer file.Close()
 			logging.Log(logging.INFO, fmt.Sprintf("Photo %s uploaded for user %s. The file size is %+v. " +
 				"MIME header is %+v.", handler.Filename, info.User.Name, handler.Size, handler.Header))
-			targetDir := paths.FileBasePath
-			tempFile, err := ioutil.TempFile(targetDir, "upload-*.jpeg")
 			if err != nil {
 				logging.Log(logging.DEBUG, fmt.Sprintf("Error generating temporary file: %s.", err.Error()))
 			}
-			defer tempFile.Close()
 			fileBytes, err := ioutil.ReadAll(file)
 			if err != nil {
 				logging.Log(logging.ERROR, fmt.Sprintf("Error reading file: %s", err.Error()))
 			}
-			_, err = tempFile.Write(encrypt(fileBytes, info.TempUser.Password))
+			filename := fmt.Sprintf("%s/user%s.jpeg", paths.FileBasePath, info.User.Name)
+			ioutil.WriteFile(filename, encrypt(fileBytes, info.TempUser.Password), 0600)
 			if err != nil {
 				logging.Log(logging.ERROR, fmt.Sprintf("Cannot write bytes to file: %s", err.Error()))
 			}
-			dirs := strings.Split(tempFile.Name(), "/")
-			info.TempUser.PhotoUrl = fmt.Sprintf("%s/%s", paths.FileBaseRelativePath, dirs[len(dirs)-1])
+			info.TempUser.PhotoUrl = filename
 			err = DecryptPhoto(info.TempUser.PhotoUrl, info.TempUser.Password, info.TempUser.Name, &info.Photo)
 			if err != nil {
 				logging.Log(logging.ERROR, fmt.Sprintf(err.Error()))
@@ -306,6 +301,14 @@ func DiscardHandler(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			logging.Log(logging.INFO, fmt.Sprintf("Temporary file removed."))
 		} else {
 			logging.Log(logging.DEBUG, fmt.Sprintf("No file to remove."))
+		}
+		if info.User.PhotoUrl == "" || info.User.PhotoUrl == paths.PlaceholderPath {
+			err := os.Remove(info.TempUser.PhotoUrl)
+			if err != nil {
+				logging.Log(logging.DEBUG, fmt.Sprintf("Cannot remove file %s: %s",
+					info.User.PhotoUrl, err.Error()))
+			}
+			logging.Log(logging.INFO, fmt.Sprintf("Removed temporarily uploaded file."))
 		}
 		info.TempUser.PhotoUrl = info.User.PhotoUrl
 		setSession(info.User, info.TempUser, info.InfoErr, info.Photo, w)

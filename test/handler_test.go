@@ -28,7 +28,9 @@ func Test_handlers(t *testing.T) {
 	})
 
 	t.Run("Login", func(t *testing.T) {
+		t.Logf("I'm there")
 		server_helpers.ClearEffects(db)
+		t.Logf("I'm here")
 		for i := 0; i < 5; i++ {
 			server_helpers.ValidLogin(t, i, db)
 		}
@@ -108,9 +110,9 @@ func Test_handlers(t *testing.T) {
 		t.Errorf("Cannot remove directory, %v", err.Error())
 	}
 	os.MkdirAll(paths.TempPath, 0777)
-	err = os.RemoveAll(paths.FileBaseRelativePath)
+	err = os.RemoveAll(paths.FileBasePath)
 	if err != nil {
 		t.Errorf("Cannot remove directory, %v", err.Error())
 	}
-	os.MkdirAll(paths.FileBaseRelativePath, 0777)
+	os.MkdirAll(paths.FileBasePath, 0777)
 }
