@@ -1,8 +1,8 @@
 // Package paths handles file paths that are used throughout the app.
 package paths
 
-var PlaceholderPath string
-var FileBasePath string
+var PlaceholderPath string // Can be some remote place
+var FileBasePath string // Can be some remote place
 var TempPath string // On local device
 
 func SetupPaths(src string) {
