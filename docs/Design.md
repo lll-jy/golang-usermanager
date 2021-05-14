@@ -201,3 +201,4 @@ The dataflow is seen as follows.
    1. Docker with Go running on MySQL: https://medium.com/wesionary-team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5
    1. Debugging failed MySQL connection: https://serverfault.com/questions/793058/can-not-access-mysql-docker
 1. Log rotate: https://github.com/lestrrat/go-file-rotatelogs
+1. Postman Chrome extension: https://blog.postman.com/10-tips-for-working-with-postman-variables/
