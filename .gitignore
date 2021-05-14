@@ -3,3 +3,6 @@
 /test/data/test_temp
 /test/data/test_upload
 /build/logs
+.idea
+main.test
+.gitignore
